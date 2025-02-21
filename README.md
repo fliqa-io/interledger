@@ -1,2 +1,0 @@
-# interledger
-Interledger OpenAPI client 
