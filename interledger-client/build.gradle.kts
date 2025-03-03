@@ -345,6 +345,9 @@ dependencies {
 	implementation("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationVersion")
 
 	testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+
+	// signature lib
+	implementation("net.visma.autopay:http-signatures:1.3.1")
 }
 
 

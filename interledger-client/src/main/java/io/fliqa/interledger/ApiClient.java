@@ -54,7 +54,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.11.0")
 public class ApiClient {
 
-  private HttpClient.Builder builder;
+  protected HttpClient.Builder builder;
   private ObjectMapper mapper;
   private String scheme;
   private String host;
@@ -207,7 +207,7 @@ public class ApiClient {
   }
 
   private String getDefaultBaseUri() {
-    return "https://ilp.interledger-test.dev/alice";
+    return "https://ilp.interledger-test.dev/";
   }
 
   public static HttpClient.Builder createDefaultHttpClientBuilder() {

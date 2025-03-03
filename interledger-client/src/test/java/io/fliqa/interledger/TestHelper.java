@@ -13,5 +13,4 @@ public class TestHelper {
 
     public static String SENDER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/sender";
     public static String RECEIVER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/reciever";
-
 }
