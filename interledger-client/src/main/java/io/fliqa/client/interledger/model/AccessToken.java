@@ -1,12 +1,11 @@
 package io.fliqa.client.interledger.model;
 
-import com.fasterxml.jackson.annotation.*;
-import io.fliqa.interledger.client.model.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.*;
+import java.util.Set;
 
 public class AccessToken {
 
     @JsonProperty("access")
-    public Set<AccessItem> access = new LinkedHashSet<>();
+    public Set<AccessItem> access;
 }

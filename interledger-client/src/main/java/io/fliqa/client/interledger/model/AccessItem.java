@@ -1,8 +1,10 @@
 package io.fliqa.client.interledger.model;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.fliqa.client.interledger.serializer.OrderedSetSerializer;
 
-import java.util.*;
+import java.util.Set;
 
 public class AccessItem {
 
@@ -10,5 +12,6 @@ public class AccessItem {
     public AccessItemType accessType;
 
     @JsonProperty("actions")
+    @JsonSerialize(using = OrderedSetSerializer.class)
     public Set<AccessAction> actions;
 }

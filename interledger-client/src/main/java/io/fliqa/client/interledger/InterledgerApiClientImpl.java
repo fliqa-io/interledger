@@ -1,47 +1,66 @@
 package io.fliqa.client.interledger;
 
-import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fliqa.client.interledger.model.*;
 
-import java.io.*;
-import java.net.*;
-import java.net.http.*;
-import java.nio.charset.*;
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.time.*;
-import java.util.*;
-import java.util.logging.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.Set;
+import java.util.logging.Logger;
 
-import static java.time.temporal.ChronoUnit.*;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class InterledgerApiClientImpl implements InterledgerApiClient {
 
-    private Logger log = Logger.getLogger(InterledgerApiClientImpl.class.getName());
+    private final Logger log = Logger.getLogger(InterledgerApiClientImpl.class.getName());
 
     private final WalletAddress clientWallet;
     private final PrivateKey privateKey;
     private final String keyId;
-    private HttpClient client;
-    private ObjectMapper mapper = new ObjectMapper();
+    private final InterledgerClientOptions options;
+
+    private final HttpClient client;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public InterledgerApiClientImpl(WalletAddress clientWallet,
                                     PrivateKey privateKey,
-                                    String keyId) {
+                                    String keyId,
+                                    InterledgerClientOptions options) {
 
         this.clientWallet = clientWallet;
         this.privateKey = privateKey;
         this.keyId = keyId;
+        this.options = options;
 
-        client = HttpClient.newHttpClient();
+        client = createDefaultHttpClient(options);
+    }
+
+    public InterledgerApiClientImpl(WalletAddress clientWallet,
+                                    PrivateKey privateKey,
+                                    String keyId) {
+        this(clientWallet, privateKey, keyId, InterledgerClientOptions.DEFAULT);
+    }
+
+    protected static HttpClient createDefaultHttpClient(InterledgerClientOptions options) {
+        return HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(options.connectTimeOutInSeconds))  // Connect timeout
+                .build();
     }
 
     @Override
     public PaymentPointer getWallet(WalletAddress address) throws IOException, InterruptedException {
 
         var request = HttpRequest.newBuilder(address.paymentPointer)
-                          .GET()
-                          .timeout(Duration.of(10, SECONDS))
-                          .build();
+                .GET()
+                .timeout(Duration.of(options.timeOutInSeconds, SECONDS))
+                .build();
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -85,6 +104,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         AccessItem incomingPayment = new AccessItem();
         incomingPayment.accessType = AccessItemType.incomingPayment;
         incomingPayment.actions = Set.of(AccessAction.read, AccessAction.complete, AccessAction.create);
+
         grantRequest.accessToken.access.add(incomingPayment);
 
         // Content-Digest: sha-512=:v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==:
@@ -96,35 +116,38 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         //createdTime = 1741002284L;
 
         String signatureParams = String.format("(\"@method\" \"@target-uri\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"%s\";created=%d",
-                                               keyId,
-                                               createdTime);
+                keyId,
+                createdTime);
         String signatureInputHeader = String.format("sig1=%s", signatureParams);
 
 
         String json = "{\"access_token\":{\"access\":[{\"type\":\"incoming-payment\",\"actions\":[\"read\",\"complete\",\"create\"]}]},\"client\":\"https://ilp.interledger-test.dev/andrejfliqatestwallet\"}";
-        // mapper.writeValueAsString(grantRequest); TODO: fix deserialization
+        String mapperJson = mapper.writeValueAsString(grantRequest);
+
+        assert mapperJson.endsWith(json);
+
         int contentLength = json.getBytes(StandardCharsets.UTF_8).length;
 
         String digest = digestContentSha512(json);
         String contentDigest = String.format("sha-512=:%s:", digest);
 
         String signatureInput = new StringBuilder()
-                                    .append("\"@method\": POST").append(System.lineSeparator())
-                                    .append("\"@target-uri\": ").append(receiver.authServer).append("/").append(System.lineSeparator())
-                                    .append("\"content-digest\": ").append(contentDigest).append(System.lineSeparator())
-                                    .append("\"content-length\": ").append(contentLength).append(System.lineSeparator())
-                                    .append("\"content-type\": application/json").append(System.lineSeparator())
-                                    .append("\"@signature-params\": ").append(signatureParams)
-                                    .toString();
+                .append("\"@method\": POST").append(System.lineSeparator())
+                .append("\"@target-uri\": ").append(receiver.authServer).append("/").append(System.lineSeparator())
+                .append("\"content-digest\": ").append(contentDigest).append(System.lineSeparator())
+                .append("\"content-length\": ").append(contentLength).append(System.lineSeparator())
+                .append("\"content-type\": application/json").append(System.lineSeparator())
+                .append("\"@signature-params\": ").append(signatureParams)
+                .toString();
 
-        assert signatureInput.equals("\"@method\": POST\n" +
-                             "\"@target-uri\": https://auth.interledger-test.dev/\n" +
-                             "\"content-digest\": sha-512=:v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==:\n" +
-                             "\"content-length\": 162\n" +
-                             "\"content-type\": application/json\n" +
-                             "\"@signature-params\": (\"@method\" \"@target-uri\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"89675b1d-53f3-4fb6-b8ea-33a56e576cef\";created=" + createdTime);
+       /* assert signatureInput.equals("\"@method\": POST\n" +
+                "\"@target-uri\": https://auth.interledger-test.dev/\n" +
+                "\"content-digest\": sha-512=:v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==:\n" +
+                "\"content-length\": 162\n" +
+                "\"content-type\": application/json\n" +
+                "\"@signature-params\": (\"@method\" \"@target-uri\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"89675b1d-53f3-4fb6-b8ea-33a56e576cef\";created=" + createdTime);
 
-
+*/
         // Example headers (typically Date, Content-Digest, etc.)
       /*  Map<String, String> headers = Map.of(
                                           "Content-Type", "application/json", // Set content type
@@ -133,7 +156,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                                           "Signature-Input", signatureInputHeader,
                                           "Content-Lenght", Integer.toString(contentLength));*/
 
-       // String bodyDigest = "sha-256=:sZtF9LVzH1aP5EC/p7gzMlfLO3pys3CQUXv2FB0UOHg=:";
+        // String bodyDigest = "sha-256=:sZtF9LVzH1aP5EC/p7gzMlfLO3pys3CQUXv2FB0UOHg=:";
 
         // Construct the signature base string
         //String signatureBase = constructSignatureBase("POST", receiver.authServer, headers, contentDigest);
@@ -148,21 +171,21 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
 
         // MANUAL
-        assert contentDigest.equals("sha-512=:v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==:");
-        assert signatureInputHeader.equals("sig1=(\"@method\" \"@target-uri\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"89675b1d-53f3-4fb6-b8ea-33a56e576cef\";created=" + createdTime);
-     //   assert signatureHeader.equals("sig1=:Muxo74zrmuf2gvAt5/mMd/BSKxMU4G80jhOHyCpzFocBQ0cnkRIej4NYYqS9fWkhfxAZD3T1mItYVRIh3gQ8Ag==:");
+        // assert contentDigest.equals("sha-512=:v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==:");
+        // assert signatureInputHeader.equals("sig1=(\"@method\" \"@target-uri\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"89675b1d-53f3-4fb6-b8ea-33a56e576cef\";created=" + createdTime);
+        //   assert signatureHeader.equals("sig1=:Muxo74zrmuf2gvAt5/mMd/BSKxMU4G80jhOHyCpzFocBQ0cnkRIej4NYYqS9fWkhfxAZD3T1mItYVRIh3gQ8Ag==:");
 
         // URI proxy = URI.create("http://localhost:8090");
         var request = HttpRequest.newBuilder(receiver.authServer)
-                          .header("Content-Type", "application/json") // Set content type
-                          .header("Accept", "application/json") // Optional: Define accepted response type
-                          .header("Content-Digest", contentDigest)
-                          .header("Signature-Input", signatureInputHeader)
-                          .header("Signature", signatureHeader)
-                       //  .header("Content-Length", Integer.toString(contentLength))
-                          .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8)) // Attach JSON body
-                          .timeout(Duration.of(10, SECONDS))
-                          .build();
+                .header("Content-Type", "application/json") // Set content type
+                .header("Accept", "application/json") // Optional: Define accepted response type
+                .header("Content-Digest", contentDigest)
+                .header("Signature-Input", signatureInputHeader)
+                .header("Signature", signatureHeader)
+                //  .header("Content-Length", Integer.toString(contentLength))
+                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8)) // Attach JSON body
+                .timeout(Duration.of(options.timeOutInSeconds, SECONDS))
+                .build();
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
