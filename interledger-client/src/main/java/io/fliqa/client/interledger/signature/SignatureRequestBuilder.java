@@ -1,11 +1,14 @@
 package io.fliqa.client.interledger.signature;
 
+import io.fliqa.client.interledger.InterledgerClientOptions;
 import io.fliqa.client.interledger.InterledgerObjectMapper;
 import io.fliqa.client.interledger.exception.InterledgerClientException;
 
 import java.net.URI;
+import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Iterator;
@@ -13,7 +16,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SignatureBuilder {
+import static java.time.temporal.ChronoUnit.SECONDS;
+
+public class SignatureRequestBuilder {
 
     /**
      * Signature base parameters
@@ -49,9 +54,9 @@ public class SignatureBuilder {
     private final InterledgerObjectMapper mapper;
     private String body;
 
-    public SignatureBuilder(PrivateKey privateKey,
-                            String keyId,
-                            InterledgerObjectMapper mapper) {
+    public SignatureRequestBuilder(PrivateKey privateKey,
+                                   String keyId,
+                                   InterledgerObjectMapper mapper) {
 
         assert privateKey != null;
         assert keyId != null && !keyId.isBlank();
@@ -66,13 +71,13 @@ public class SignatureBuilder {
         this.mapper = mapper;
     }
 
-    public SignatureBuilder(PrivateKey privateKey,
-                            String keyId) {
+    public SignatureRequestBuilder(PrivateKey privateKey,
+                                   String keyId) {
 
         this(privateKey, keyId, null);
     }
 
-    public SignatureBuilder method(String value) {
+    public SignatureRequestBuilder method(String value) {
         if (value == null || value.isBlank() || (!value.equalsIgnoreCase("GET") && !value.equalsIgnoreCase("POST"))) {
             throw new IllegalArgumentException("Method must not be null or empty! Expected: POST or GET.");
         }
@@ -80,16 +85,21 @@ public class SignatureBuilder {
         return this;
     }
 
-    public SignatureBuilder target(String value) {
+    public String getMethod() {
+        checkHasParameter(METHOD);
+        return parameters.get(METHOD).toString();
+    }
+
+    public SignatureRequestBuilder target(String value) {
         return target(URI.create(value));
     }
 
-    public SignatureBuilder target(URI value) {
+    public SignatureRequestBuilder target(URI value) {
         parameters.put(TARGET, prepareTarget(value));
         return this;
     }
 
-    public SignatureBuilder json(Object object) {
+    public SignatureRequestBuilder json(Object object) {
 
         try {
             String value = mapper.writeValueAsString(object);
@@ -105,7 +115,7 @@ public class SignatureBuilder {
      * @param json to set as body
      * @return self
      */
-    public SignatureBuilder json(String json) {
+    public SignatureRequestBuilder json(String json) {
         if (json == null || json.isBlank()) {
             throw new IllegalArgumentException("JSON must not be null or empty!");
         }
@@ -141,11 +151,11 @@ public class SignatureBuilder {
         parameters.put(SIGNATURE_PARAMS, params);
     }
 
-    public SignatureBuilder build() {
+    public SignatureRequestBuilder build() {
         return build(Instant.now().getEpochSecond());
     }
 
-    public SignatureBuilder build(long created) {
+    public SignatureRequestBuilder build(long created) {
         this.created = created;
         setSignatureParams();
         return this;
@@ -170,13 +180,10 @@ public class SignatureBuilder {
         return out;
     }
 
-   /* public String getContentDigestHeader() {
-        String digest = parameters.get(CONTENT_DIGEST_HEADER).toString();
-        if (digest == null) {
-            throw new IllegalStateException("Content digest must be set!");
-        }
-        return String.format("sha-512=:%s:", digest);
-    }*/
+    public URI getTarget() {
+        checkHasParameter(TARGET);
+        return URI.create(parameters.get(TARGET).toString());
+    }
 
     public String getSignatureParamsHeader() {
 
@@ -189,6 +196,12 @@ public class SignatureBuilder {
     private void checkIsBuild() {
         if (parameters.get(SIGNATURE_PARAMS) == null) {
             throw new IllegalStateException("Signature must be build before retrieval of signature params header!");
+        }
+    }
+
+    private void checkHasParameter(String key) {
+        if (parameters.get(key) == null) {
+            throw new IllegalStateException(String.format("Parameter '%s' must be set before continuing!", key));
         }
     }
 
@@ -244,7 +257,7 @@ public class SignatureBuilder {
         }
     }
 
-    protected String getSigatureHeader() {
+    protected String getSignatureHeader() {
         return String.format("%s=:%s:", DEFAULT_SIGNATURE_ID, getSignature());
     }
 
@@ -265,23 +278,57 @@ public class SignatureBuilder {
         // TODO: add token header option
 
         headers.put(SIGNATURE_INPUT_HEADER, getSignatureParamsHeader());
-        headers.put(SIGNATURE_HEADER, getSigatureHeader());
+        headers.put(SIGNATURE_HEADER, getSignatureHeader());
         return headers;
     }
-/*
-
-    public static String[] mapToStringArray(LinkedHashMap<String, String> map) {
-        List<String> list = new ArrayList<>();
-
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            list.add(entry.getKey() + ": " + entry.getValue());
-        }
-
-        return list.toArray(new String[0]);
-    }
-*/
 
     public String getBody() {
         return body;
+    }
+
+    /**
+     * Builds up signed request from all input data
+     *
+     * @param options client options (aka timeouts)
+     * @return request
+     */
+    public HttpRequest getRequest(InterledgerClientOptions options) {
+
+        checkIsBuild();
+
+        // sign the request
+        HttpRequest.Builder builder = HttpRequest.newBuilder(getTarget());
+        for (Map.Entry<String, String> entry : getHeaders().entrySet()) {
+            builder.header(entry.getKey(), entry.getValue());
+        }
+
+        switch (getMethod()) {
+            case "GET":
+                builder.GET();
+                break;
+            case "POST":
+                if (body == null || body.isBlank()) {
+                    builder.POST(HttpRequest.BodyPublishers.noBody());
+                } else {
+                    builder.POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
+                }
+                break;
+            case "PUT":
+                if (body == null || body.isBlank()) {
+                    builder.PUT(HttpRequest.BodyPublishers.noBody());
+                } else {
+                    builder.PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
+                }
+                break;
+            case "DELETE":
+                builder.DELETE();
+                break;
+            case "HEAD":
+                builder.HEAD();
+                break;
+        }
+
+        builder.timeout(Duration.of(options.timeOutInSeconds, SECONDS));
+        return builder.build();
     }
 }

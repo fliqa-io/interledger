@@ -23,12 +23,7 @@ public class InterledgerObjectMapper {
         // make sure map fields are always in the same order
         mapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
-        // Add support for Java 8 date/time types
-        // mapper.registerModule(new JavaTimeModule());
-
-        // Global serialization/deserialization settings
-        // mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-
+        // don't fail on unknown fields
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         return mapper;
     }

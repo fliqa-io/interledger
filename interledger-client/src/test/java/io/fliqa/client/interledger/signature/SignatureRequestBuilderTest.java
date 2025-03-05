@@ -11,16 +11,16 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import static io.fliqa.client.interledger.signature.SignatureBuilder.*;
+import static io.fliqa.client.interledger.signature.SignatureRequestBuilder.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class SignatureBuilderTest {
+class SignatureRequestBuilderTest {
 
     @Test
     public void generateSignature() throws Exception {
 
         long createdTime = 1741002284L;
-        SignatureBuilder builder = new SignatureBuilder(TestHelper.getPrivateKey(), TestHelper.CLIENT_KEY_ID)
+        SignatureRequestBuilder builder = new SignatureRequestBuilder(TestHelper.getPrivateKey(), TestHelper.CLIENT_KEY_ID)
                 .method("POST")
                 .target(URI.create("https://auth.interledger-test.dev"))
                 .json("{\"access_token\":{\"access\":[{\"type\":\"incoming-payment\",\"actions\":[\"read\",\"complete\",\"create\"]}]},\"client\":\"https://ilp.interledger-test.dev/andrejfliqatestwallet\"}")
@@ -55,7 +55,7 @@ class SignatureBuilderTest {
                 AccessItemType.incomingPayment,
                 Set.of(AccessAction.read, AccessAction.complete, AccessAction.create));
 
-        SignatureBuilder builder = new SignatureBuilder(TestHelper.getPrivateKey(), TestHelper.CLIENT_KEY_ID)
+        SignatureRequestBuilder builder = new SignatureRequestBuilder(TestHelper.getPrivateKey(), TestHelper.CLIENT_KEY_ID)
                 .method("POST")
                 .target(URI.create("https://auth.interledger-test.dev"))
                 .json(grantRequest)

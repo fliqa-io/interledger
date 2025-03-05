@@ -1,30 +1,26 @@
 package io.fliqa.client.interledger.model;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.net.*;
+import java.net.URI;
 
 public class PaymentPointer {
 
-    @JsonProperty("id")
+    @JsonProperty(value = "id", required = true)
     public URI id; // "https://ilp.interledger-test.dev/andrejfliqatestwallet",
 
-    @JsonProperty("publicName")
+    @JsonProperty(value = "publicName", required = true)
     public String publicName;
 
-    @JsonProperty("assetCode")
+    @JsonProperty(value = "assetCode", required = true)
     public String assetCode;
 
-    @JsonProperty("assetScale")
+    @JsonProperty(value = "assetScale", required = true)
     public int assetScale;
 
-    @JsonProperty("authServer")
+    @JsonProperty(value = "authServer", required = true)
     public URI authServer;
 
-    @JsonProperty("resourceServer")
+    @JsonProperty(value = "resourceServer", required = true)
     public URI resourceServer;
-
-    public PaymentPointer() {
-
-    }
 }

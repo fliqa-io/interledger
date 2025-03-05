@@ -2,8 +2,8 @@ package io.fliqa.client.interledger;
 
 public class InterledgerClientOptions {
 
-    final int connectTimeOutInSeconds;
-    final int timeOutInSeconds;
+    public final int connectTimeOutInSeconds;
+    public final int timeOutInSeconds;
 
     /**
      * @param connectTimeout Timeout for establishing connections, in seconds.

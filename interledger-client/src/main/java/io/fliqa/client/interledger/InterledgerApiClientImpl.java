@@ -2,15 +2,14 @@ package io.fliqa.client.interledger;
 
 import io.fliqa.client.interledger.exception.InterledgerClientException;
 import io.fliqa.client.interledger.model.*;
-import io.fliqa.client.interledger.signature.SignatureBuilder;
+import io.fliqa.client.interledger.signature.SignatureRequestBuilder;
 
+import java.math.BigDecimal;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.time.Duration;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -53,6 +52,13 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                 .build();
     }
 
+    /*public static Consumer<HttpRequest.Builder> signRequest(String token) {
+        return builder -> {
+            builder.header("Authorization", "Bearer " + token);
+            builder.header("X-Custom-Header", "CustomValue");
+        };
+    }*/
+
     @Override
     public PaymentPointer getWallet(WalletAddress address) throws InterledgerClientException {
 
@@ -78,28 +84,45 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                 AccessItemType.incomingPayment,
                 Set.of(AccessAction.read, AccessAction.complete, AccessAction.create));
 
-        SignatureBuilder builder = new SignatureBuilder(privateKey, keyId, mapper);
-        builder.method("POST")
+        HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
+                .method("POST")
                 .target(receiver.authServer)
                 .json(grantRequest)
-                .build();
-
-        var request = HttpRequest.newBuilder(receiver.authServer);
-
-        for (Map.Entry<String, String> entry : builder.getHeaders().entrySet()) {
-            request.header(entry.getKey(), entry.getValue());
-        }
-
-        request.POST(HttpRequest.BodyPublishers.ofString(builder.getBody(), StandardCharsets.UTF_8)) // Attach JSON body
-                .timeout(Duration.of(options.timeOutInSeconds, SECONDS));
+                .build()
+                .getRequest(options);
 
         try {
-            HttpResponse<String> response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             return mapper.readValue(response.body(), PendingGrant.class);
             // TODO: check response code before deserialization
         } catch (Exception e) {
             log.warning(String.format("Failed create pending grant: %s", e));
             throw new InterledgerClientException(e.getMessage(), e);
         }
+    }
+
+    @Override
+    public IncomingPayment createIncomingPayment(String grantToken, PaymentPointer receiver, BigDecimal amount) throws InterledgerClientException {
+        return null;
+    }
+
+    @Override
+    public PendingQuote createQuoteRequest(PaymentPointer sender, BigDecimal amount) throws InterledgerClientException {
+        return null;
+    }
+
+    @Override
+    public Quote createQuote(String quoteToken, PaymentPointer sender, IncomingPayment incomingPayment) throws InterledgerClientException {
+        return null;
+    }
+
+    @Override
+    public OutgoingPayment continueGrant(PaymentPointer sender, Quote quote) throws InterledgerClientException {
+        return null;
+    }
+
+    @Override
+    public FinalizedPayment finalizePayment(OutgoingPayment outgoingPayment) throws InterledgerClientException {
+        return null;
     }
 }
