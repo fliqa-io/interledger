@@ -15,7 +15,7 @@ class GrantRequestSerializationTest {
     @Test
     public void testSerialize() throws Exception {
 
-        GrantRequest grantRequest = new GrantRequest(new WalletAddress("https://ilp.interledger-test.dev/andrejfliqatestwallet"));
+        GrantAccessRequest grantRequest = new GrantAccessRequest(new WalletAddress("https://ilp.interledger-test.dev/andrejfliqatestwallet"));
         grantRequest.accessToken = new AccessToken();
 
         AccessItem incomingPayment = new AccessItem();

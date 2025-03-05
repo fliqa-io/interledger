@@ -11,6 +11,16 @@ public class WalletAddress {
     public final URI paymentPointer;
 
     public WalletAddress(String address) {
+        if (address == null) {
+            throw new IllegalArgumentException("Address cannot be null.");
+        }
         this.paymentPointer = URI.create(address);
+    }
+
+    public WalletAddress(URI address) {
+        if (address == null) {
+            throw new IllegalArgumentException("Address cannot be null.");
+        }
+        this.paymentPointer = address;
     }
 }

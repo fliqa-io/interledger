@@ -16,6 +16,7 @@ class InterledgerAmountTest {
         assertEquals("1235", amount.amount);
         assertEquals(2, amount.assetScale);
         assertEquals("EUR", amount.assetCode);
+        assertEquals(BigDecimal.valueOf(12.35), amount.asBigDecimal());
     }
 
     @Test
@@ -25,6 +26,7 @@ class InterledgerAmountTest {
         assertEquals("1234567890123456789012", amount.amount);
         assertEquals(2, amount.assetScale);
         assertEquals("USD", amount.assetCode);
+        assertEquals(new BigDecimal("12345678901234567890.12"), amount.asBigDecimal());
     }
 
     @Test
@@ -49,6 +51,4 @@ class InterledgerAmountTest {
         );
         assertEquals("assetCode must be 3 characters long / ISO4217 currency code, but was: 'EURO'.", exception.getMessage());
     }
-
-
 }

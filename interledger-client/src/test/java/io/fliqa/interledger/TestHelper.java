@@ -28,7 +28,7 @@ public final class TestHelper {
     public static String CLIENT_KEY_ID = "89675b1d-53f3-4fb6-b8ea-33a56e576cef";
 
     public static String SENDER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/sender";
-    public static String RECEIVER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/reciever";
+    public static String RECEIVER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/receiver";
 
     public static PrivateKey getPrivateKey() throws Exception {
         // Remove PEM headers and decode Base64

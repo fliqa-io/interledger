@@ -3,10 +3,10 @@ package io.fliqa.client.interledger.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class PendingGrant {
+public class AccessGrant {
 
     @JsonProperty("access_token")
-    public AccessToken accessToken;
+    public AccessToken access;
 
     @JsonProperty("continue")
     @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -2,7 +2,7 @@ package io.fliqa.client.interledger.signature;
 
 import io.fliqa.client.interledger.model.AccessAction;
 import io.fliqa.client.interledger.model.AccessItemType;
-import io.fliqa.client.interledger.model.GrantRequest;
+import io.fliqa.client.interledger.model.GrantAccessRequest;
 import io.fliqa.client.interledger.model.WalletAddress;
 import io.fliqa.interledger.TestHelper;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class SignatureRequestBuilderTest {
     @Test
     public void generateSignatureWithGrantRequest() throws Exception {
 
-        GrantRequest grantRequest = GrantRequest.build(new WalletAddress(TestHelper.CLIENT_WALLET_ADDRESS),
+        GrantAccessRequest grantRequest = GrantAccessRequest.build(new WalletAddress(TestHelper.CLIENT_WALLET_ADDRESS),
                 AccessItemType.incomingPayment,
                 Set.of(AccessAction.read, AccessAction.complete, AccessAction.create));
 

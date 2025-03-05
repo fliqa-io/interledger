@@ -9,7 +9,7 @@ import java.util.Set;
 public class AccessToken {
 
     @JsonProperty(value = "value", required = true)
-    public String value;
+    public String token;
 
     @JsonProperty(value = "manage", required = true)
     public URI manage;

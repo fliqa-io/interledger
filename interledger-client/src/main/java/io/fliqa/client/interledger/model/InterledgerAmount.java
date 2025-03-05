@@ -22,6 +22,10 @@ public class InterledgerAmount {
     @JsonProperty(value = "value", required = true)
     public String amount;
 
+    public BigDecimal asBigDecimal() {
+        return new BigDecimal(amount).movePointLeft(assetScale);
+    }
+
     /**
      * Builds an InterledgerAmount object by converting the provided BigDecimal amount into an Interledger
      * formatted amount (string representation) with a default scale of 2 and asset code.

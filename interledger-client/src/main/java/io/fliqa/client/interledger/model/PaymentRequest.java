@@ -26,7 +26,7 @@ public class PaymentRequest {
 
     public static PaymentRequest build(PaymentPointer receiver, BigDecimal amount) {
         PaymentRequest request = new PaymentRequest();
-        request.walletAddress = receiver.id;
+        request.walletAddress = receiver.address;
         request.incomingAmount = InterledgerAmount.build(amount, receiver.assetCode, receiver.assetScale);
 
         // TODO: testing remove later

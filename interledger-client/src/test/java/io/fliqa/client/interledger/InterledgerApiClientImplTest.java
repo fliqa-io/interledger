@@ -1,17 +1,16 @@
 package io.fliqa.client.interledger;
 
 import io.fliqa.client.interledger.exception.InterledgerClientException;
-import io.fliqa.client.interledger.model.IncomingPayment;
-import io.fliqa.client.interledger.model.PaymentPointer;
-import io.fliqa.client.interledger.model.PendingGrant;
-import io.fliqa.client.interledger.model.WalletAddress;
+import io.fliqa.client.interledger.model.*;
 import io.fliqa.interledger.TestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.swing.*;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.security.PrivateKey;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -19,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class InterledgerApiClientImplTest {
 
     private InterledgerApiClientImpl client;
+
+    private static final Logger log = Logger.getLogger(InterledgerApiClientImplTest.class.getName());
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -36,7 +37,7 @@ class InterledgerApiClientImplTest {
         PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS));
         assertNotNull(wallet);
 
-        assertEquals(URI.create("https://ilp.interledger-test.dev/reciever"), wallet.id);
+        assertEquals(URI.create("https://ilp.interledger-test.dev/reciever"), wallet.address);
         assertEquals("reciever", wallet.publicName);
         assertEquals("EUR", wallet.assetCode);
         assertEquals(2, wallet.assetScale);
@@ -48,16 +49,47 @@ class InterledgerApiClientImplTest {
     @Test
     public void getGrantRequest() throws InterledgerClientException {
 
-        // 0. get reciever wallet
-        PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS));
-        assertNotNull(wallet);
+        // 0. get receiver receiverWallet
+        PaymentPointer receiverWallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS));
+        assertNotNull(receiverWallet);
 
         // 1. create grant request
-        PendingGrant grantRequest = client.createPendingGrant(wallet);
+        AccessGrant grantRequest = client.createPendingGrant(receiverWallet);
         assertNotNull(grantRequest);
 
         // 2. create incoming payment request
-        IncomingPayment incomingPayment = client.createIncomingPayment(wallet, grantRequest, BigDecimal.valueOf(12.34));
+        IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(12.34));
         assertNotNull(incomingPayment);
+
+        // get sender wallet (at this point the user has to enter his wallet address)
+        PaymentPointer senderWallet = client.getWallet(new WalletAddress(TestHelper.SENDER_WALLET_ADDRESS));
+        assertNotNull(senderWallet);
+
+        // 3. create a quote request
+        AccessGrant quoteRequest = client.createQuoteRequest(senderWallet);
+        assertNotNull(quoteRequest);
+
+        // 4. get quote
+        Quote quote = client.createQuote(quoteRequest.access.token, senderWallet, incomingPayment);
+        assertNotNull(quote);
+
+        // 5. continue / get redirect interact
+        OutgoingPayment continueInteract = client.continueGrant(senderWallet, quote);
+        log.info(String.format("CLICK ON LINK: %s", continueInteract.interact.redirect));
+
+        log.info("CONTINUE TOKEN: " + continueInteract.paymentContinue.access.token);
+
+        // Wait for the user to press a button before proceeding
+        JOptionPane.showMessageDialog(null,
+                "Click on the provided link,\n" +
+                        "then press OK once you've completed the action at the provided link.");
+
+        // 6. finish payment
+        AccessGrant finalized = client.finalizeGrant(continueInteract);
+        assertNotNull(finalized);
+
+        FinalizedPayment finalizedPayment = client.finalizePayment(finalized,
+                senderWallet, quote);
+        assertNotNull(finalizedPayment);
     }
 }

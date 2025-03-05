@@ -97,6 +97,11 @@ public class SignatureRequestBuilder {
         return method("POST").json(body);
     }
 
+    public SignatureRequestBuilder POST() {
+        checkMethod();
+        return method("POST");
+    }
+
     public SignatureRequestBuilder PUT(Object body) {
         checkMethod();
         return method("PUT").json(body);

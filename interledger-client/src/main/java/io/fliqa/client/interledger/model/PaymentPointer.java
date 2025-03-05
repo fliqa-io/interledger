@@ -7,7 +7,7 @@ import java.net.URI;
 public class PaymentPointer {
 
     @JsonProperty(value = "id", required = true)
-    public URI id; // "https://ilp.interledger-test.dev/andrejfliqatestwallet",
+    public URI address; // "https://ilp.interledger-test.dev/andrejfliqatestwallet",
 
     @JsonProperty(value = "publicName", required = true)
     public String publicName;

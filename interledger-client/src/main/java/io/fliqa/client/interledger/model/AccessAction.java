@@ -7,7 +7,10 @@ public enum AccessAction {
 
     read("read"),
     complete("complete"),
-    create("create");
+    create("create"),
+    read_all("read-all"),
+    list("list"),
+    list_all("list-all");
 
     public final String value;
 

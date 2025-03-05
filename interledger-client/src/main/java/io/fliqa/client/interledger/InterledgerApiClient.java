@@ -29,7 +29,7 @@ public interface InterledgerApiClient {
      * @return the consent that a grant request can be created on the wallet (aka access)
      * @throws InterledgerClientException
      */
-    PendingGrant createPendingGrant(PaymentPointer receiver) throws InterledgerClientException;
+    AccessGrant createPendingGrant(PaymentPointer receiver) throws InterledgerClientException;
 
     /**
      * Step 2 (RECEIVER)
@@ -41,18 +41,17 @@ public interface InterledgerApiClient {
      * @return incoming payment request that will be used on sender wallet
      * @throws InterledgerClientException
      */
-    IncomingPayment createIncomingPayment(PaymentPointer receiver, PendingGrant pendingGrant, BigDecimal amount) throws InterledgerClientException;
+    IncomingPayment createIncomingPayment(PaymentPointer receiver, AccessGrant pendingGrant, BigDecimal amount) throws InterledgerClientException;
 
     /**
      * Step 3 (SENDER)
      * Use wallet address to get a token in order to produce a quote (cost estimation) of the transaction to take place
      *
      * @param sender wallet
-     * @param amount to be sent from sender to receiver in two decimal places
      * @return pending quote
      * @throws InterledgerClientException
      */
-    PendingQuote createQuoteRequest(PaymentPointer sender, BigDecimal amount) throws InterledgerClientException;
+    AccessGrant createQuoteRequest(PaymentPointer sender) throws InterledgerClientException;
 
     /**
      * Step 4 (SENDER)
@@ -80,11 +79,23 @@ public interface InterledgerApiClient {
 
     /**
      * Step 6 (CLIENT)
-     * Payment was confirmed by the sender we can finalize it
+     * Payment was confirmed by the sender we can get access to finalize it
      *
      * @param outgoingPayment to be finalized
      * @return finalized payment
      * @throws InterledgerClientException
      */
-    FinalizedPayment finalizePayment(OutgoingPayment outgoingPayment) throws InterledgerClientException;
+    AccessGrant finalizeGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException;
+
+    /**
+     * Step 7 (CLIENT)
+     * Finalize payment
+     *
+     * @param finalized    grant for finalizing payment
+     * @param senderWallet
+     * @param quote
+     * @return
+     * @throws InterledgerClientException
+     */
+    FinalizedPayment finalizePayment(AccessGrant finalized, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException;
 }
