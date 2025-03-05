@@ -1,24 +1,25 @@
 package io.fliqa.interledger.client;
 
-import io.fliqa.interledger.*;
+import io.fliqa.interledger.ApiClient;
+import io.fliqa.interledger.ApiException;
+import io.fliqa.interledger.SignedApiClient;
+import io.fliqa.interledger.TestHelper;
 import io.fliqa.interledger.client.model.*;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 
-import java.net.*;
-import java.nio.charset.*;
-import java.security.*;
-import java.security.spec.*;
-import java.time.*;
-import java.time.format.*;
-import java.util.*;
-import java.util.logging.*;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
+import java.util.Set;
+import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class GrantApiTest {
 
     ApiClient apiClient = new ApiClient()
-                              .setBasePath("https://ilp.interledger-test.dev");
+            .setBasePath("https://ilp.interledger-test.dev");
 
     GrantApi grantApi = new GrantApi(apiClient);
 
@@ -27,9 +28,9 @@ class GrantApiTest {
     public static PrivateKey loadPrivateKey(String base64Key) throws Exception {
         // Remove PEM headers and decode Base64
         String privateKeyBase64 = base64Key
-                                      .replace("-----BEGIN PRIVATE KEY-----", "")
-                                      .replace("-----END PRIVATE KEY-----", "")
-                                      .replaceAll("\\s", "");
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replaceAll("\\s", "");
 
         byte[] keyBytes = Base64.getDecoder().decode(privateKeyBase64);
         KeyFactory keyFactory = KeyFactory.getInstance("Ed25519");
@@ -99,8 +100,7 @@ class GrantApiTest {
 
             log.info("Found receiver wallet");
             log.info(receiverWallet.toString());
-        }
-        catch (ApiException ex) {
+        } catch (ApiException ex) {
             log.severe("Failed to get receiver wallet: " + ex.getMessage());
         }
         assertNotNull(receiverWallet);
@@ -123,7 +123,7 @@ class GrantApiTest {
         });
         */
         SignedApiClient incomingClient = new SignedApiClient(TestHelper.CLIENT_KEY_ID,
-                                                             loadPrivateKey(TestHelper.CLIENT_PRIVATE_KEY));
+                TestHelper.getPrivateKey());
         incomingClient.updateBaseUri(receiverWallet.getAuthServer().toString());
 
         // Call the API
@@ -149,8 +149,7 @@ class GrantApiTest {
 
             log.info("Created incoming payment request");
             log.info(incomingRequest.toString());
-        }
-        catch (ApiException ex) {
+        } catch (ApiException ex) {
             log.severe("Failed to get receiver wallet: " + ex.getMessage());
         }
         assertNotNull(incomingRequest);
