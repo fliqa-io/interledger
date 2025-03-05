@@ -1,12 +1,15 @@
 package io.fliqa.client.interledger;
 
 import io.fliqa.client.interledger.exception.InterledgerClientException;
+import io.fliqa.client.interledger.model.IncomingPayment;
 import io.fliqa.client.interledger.model.PaymentPointer;
+import io.fliqa.client.interledger.model.PendingGrant;
 import io.fliqa.client.interledger.model.WalletAddress;
 import io.fliqa.interledger.TestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.security.PrivateKey;
 
@@ -15,9 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class InterledgerApiClientImplTest {
 
-    private static final String BASE_PATH = "https://ilp.interledger-test.dev";
     private InterledgerApiClientImpl client;
-
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -47,39 +48,16 @@ class InterledgerApiClientImplTest {
     @Test
     public void getGrantRequest() throws InterledgerClientException {
 
+        // 0. get reciever wallet
         PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS));
-        client.createPendingGrant(wallet);
+        assertNotNull(wallet);
+
+        // 1. create grant request
+        PendingGrant grantRequest = client.createPendingGrant(wallet);
+        assertNotNull(grantRequest);
+
+        // 2. create incoming payment request
+        IncomingPayment incomingPayment = client.createIncomingPayment(wallet, grantRequest, BigDecimal.valueOf(12.34));
+        assertNotNull(incomingPayment);
     }
-
-
-    String requestBody = "{\n" +
-            "    \"access_token\": {\n" +
-            "        \"access\": [ \n" +
-            "            {\n" +
-            "                \"actions\": [\n" +
-            "                    \"read\", \n" +
-            "                    \"complete\", \n" +
-            "                    \"create\"\n" +
-            "                ], \n" +
-            "                \"type\": \"incoming-payment\"\n" +
-            "            }\n" +
-            "        ]\n" +
-            "    }, \n" +
-            "    \"client\": \"https://ilp.interledger-test.dev/andrejfliqatestwallet\"\n" +
-            "}";
-
-    String json = "{    \"access_token\": {        \"access\": [            {                \"actions\": [                    \"read\",                    \"complete\",                    \"create\"                ],                \"type\": \"incoming-payment\"            }        ]    },    \"client\": \"https://ilp.interledger-test.dev/andrejfliqatestwallet\"}";
-
-   /* @Test
-    public void digestContentTest() throws NoSuchAlgorithmException {
-        System.out.println("----");
-        System.out.println(requestBody);
-        System.out.println("----");
-
-        String out = InterledgerApiClientImpl.digestContentSha512(requestBody);
-        assertEquals("v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==", out);
-    }
-*/
-
-
 }

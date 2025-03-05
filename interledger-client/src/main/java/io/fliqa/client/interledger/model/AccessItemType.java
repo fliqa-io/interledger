@@ -32,6 +32,6 @@ public enum AccessItemType {
                 return item;
             }
         }
-        throw new IllegalArgumentException("Unknown AccessItemType: '" + value + "'");
+        throw new IllegalArgumentException("Unknown AccessItemType: '" + value + "'.");
     }
 }

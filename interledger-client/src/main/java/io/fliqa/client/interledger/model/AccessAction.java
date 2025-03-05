@@ -32,6 +32,6 @@ public enum AccessAction {
                 return item;
             }
         }
-        throw new IllegalArgumentException("Unknown AccessAction: '" + value + "'");
+        throw new IllegalArgumentException("Unknown AccessAction: '" + value + "'.");
     }
 }

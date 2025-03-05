@@ -13,6 +13,12 @@ public class GrantRequest {
     @JsonProperty("access_token")
     public AccessToken accessToken;
 
+    /*
+        currently not utilized
+        @JsonProperty("interact")
+        public Object interact;
+    */
+
     public GrantRequest(WalletAddress client) {
         this.client = client;
     }

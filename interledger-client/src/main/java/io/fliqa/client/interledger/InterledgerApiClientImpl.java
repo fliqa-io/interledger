@@ -52,13 +52,6 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                 .build();
     }
 
-    /*public static Consumer<HttpRequest.Builder> signRequest(String token) {
-        return builder -> {
-            builder.header("Authorization", "Bearer " + token);
-            builder.header("X-Custom-Header", "CustomValue");
-        };
-    }*/
-
     @Override
     public PaymentPointer getWallet(WalletAddress address) throws InterledgerClientException {
 
@@ -67,14 +60,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                 .timeout(Duration.of(options.timeOutInSeconds, SECONDS))
                 .build();
 
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            // TODO also check response code and return appropriate exception
-            return mapper.readValue(response.body(), PaymentPointer.class);
-        } catch (Exception e) {
-            log.warning(String.format("Failed to read wallet: %s", address.paymentPointer));
-            throw new InterledgerClientException(e.getMessage(), e);
-        }
+        return send(request, PaymentPointer.class);
     }
 
     @Override
@@ -85,25 +71,25 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                 Set.of(AccessAction.read, AccessAction.complete, AccessAction.create));
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
-                .method("POST")
+                .POST(grantRequest)
                 .target(receiver.authServer)
-                .json(grantRequest)
-                .build()
                 .getRequest(options);
 
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            return mapper.readValue(response.body(), PendingGrant.class);
-            // TODO: check response code before deserialization
-        } catch (Exception e) {
-            log.warning(String.format("Failed create pending grant: %s", e));
-            throw new InterledgerClientException(e.getMessage(), e);
-        }
+        return send(request, PendingGrant.class);
     }
 
     @Override
-    public IncomingPayment createIncomingPayment(String grantToken, PaymentPointer receiver, BigDecimal amount) throws InterledgerClientException {
-        return null;
+    public IncomingPayment createIncomingPayment(PaymentPointer receiver, PendingGrant pendingGrant, BigDecimal amount) throws InterledgerClientException {
+
+        PaymentRequest paymentRequest = PaymentRequest.build(receiver, amount);
+
+        HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
+                .POST(paymentRequest)
+                .target(receiver.resourceServer + "/incoming-payments")
+                .accessToken(pendingGrant.accessToken.value)
+                .getRequest(options);
+
+        return send(request, IncomingPayment.class);
     }
 
     @Override
@@ -124,5 +110,17 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     @Override
     public FinalizedPayment finalizePayment(OutgoingPayment outgoingPayment) throws InterledgerClientException {
         return null;
+    }
+
+    public <T> T send(HttpRequest request, Class<T> responseType) throws InterledgerClientException {
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            log.info(String.format("Response: %s", response.body()));
+            return mapper.readValue(response.body(), responseType);
+            // TODO: check response code before deserialization
+        } catch (Exception e) {
+            log.warning(String.format("Failed create pending grant: %s.", e));
+            throw new InterledgerClientException(e.getMessage(), e);
+        }
     }
 }

@@ -10,10 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -35,11 +32,21 @@ public class SignatureRequestBuilder {
     static final String CONTENT_LENGTH_HEADER = "Content-Length";
     static final String SIGNATURE_INPUT_HEADER = "Signature-Input";
     static final String SIGNATURE_HEADER = "Signature";
+    static final String AUTHORIZATION_HEADER = "Authorization";
+    static final String ACCEPT_HEADER = "Accept";
 
     static final String APPLICATION_JSON = "application/json";
 
     static final String DEFAULT_SIGNATURE_ID = "sig1";
-    public static final String ACCEPT_HEADER = "Accept";
+
+    /*
+     * Digest algorithm
+     */
+    static final String DIGEST_ALGORITHM = "SHA-512";
+    static final String SIGNATURE_ALGORITHM = "Ed25519";
+
+    static final Set<String> ALLOWED_METHODS = Set.of("GET", "POST", "PUT", "DELETE", "HEAD");
+
     /**
      * Signature signing
      **/
@@ -78,11 +85,31 @@ public class SignatureRequestBuilder {
     }
 
     public SignatureRequestBuilder method(String value) {
-        if (value == null || value.isBlank() || (!value.equalsIgnoreCase("GET") && !value.equalsIgnoreCase("POST"))) {
-            throw new IllegalArgumentException("Method must not be null or empty! Expected: POST or GET.");
+        if (value == null || value.isBlank() || !ALLOWED_METHODS.contains(value)) {
+            throw new IllegalArgumentException(String.format("Method '%s' is not allowed. Allowed methods are: %s", value, String.join(", ", ALLOWED_METHODS)));
         }
         parameters.put(METHOD, value.toUpperCase());
         return this;
+    }
+
+    public SignatureRequestBuilder POST(Object body) {
+        checkMethod();
+        return method("POST").json(body);
+    }
+
+    public SignatureRequestBuilder PUT(Object body) {
+        checkMethod();
+        return method("PUT").json(body);
+    }
+
+    public SignatureRequestBuilder GET() {
+        checkMethod();
+        return method("GET");
+    }
+
+    public SignatureRequestBuilder DELETE() {
+        checkMethod();
+        return method("DELETE");
     }
 
     public String getMethod() {
@@ -126,6 +153,20 @@ public class SignatureRequestBuilder {
         return this;
     }
 
+    public SignatureRequestBuilder accessToken(String token) {
+
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token must not be null or empty!");
+        }
+
+        parameters.put(AUTHORIZATION_HEADER, prepareToken(token));
+        return this;
+    }
+
+    private String prepareToken(String token) {
+        return String.format("GNAP %s", token);
+    }
+
     private void length(String content) {
         int contentLength = content.getBytes(StandardCharsets.UTF_8).length;
         parameters.put(CONTENT_LENGTH_HEADER, contentLength);
@@ -134,27 +175,38 @@ public class SignatureRequestBuilder {
     private void digest(String value) {
         try {
             String digest = digestContentSha512(value);
-            String digestHeader = String.format("sha-512=:%s:", digest);
+            String digestHeader = String.format("%s=:%s:", DIGEST_ALGORITHM.toLowerCase(), digest);
             parameters.put(CONTENT_DIGEST_HEADER, digestHeader);
         } catch (Exception e) {
-            throw new IllegalArgumentException(String.format("Failed to calculate digest for: '%s'", value), e);
+            throw new IllegalArgumentException(String.format("Failed to calculate %s digest for: '%s'.", DIGEST_ALGORITHM, value), e);
         }
     }
 
     protected void setSignatureParams() {
 
         String signatureParams = parameters.keySet().stream()
-                .map(item -> "\"" + item.toLowerCase() + "\"")  // Quote each item
+                .map(item -> "\"" + item.toLowerCase() + "\"")  // Quote each item, need to be lower case
                 .collect(Collectors.joining(" "));
 
         String params = String.format("(%s);keyid=\"%s\";created=%d", signatureParams, keyId, created);
         parameters.put(SIGNATURE_PARAMS, params);
     }
 
+    /**
+     * Build the signature should be called last before creating the request
+     *
+     * @return self
+     */
     public SignatureRequestBuilder build() {
         return build(Instant.now().getEpochSecond());
     }
 
+    /**
+     * Build the signature for a specific time stamp should be called last before creating the request
+     *
+     * @param created time stamp in seconds, must be > 0
+     * @return self
+     */
     public SignatureRequestBuilder build(long created) {
         this.created = created;
         setSignatureParams();
@@ -201,7 +253,13 @@ public class SignatureRequestBuilder {
 
     private void checkHasParameter(String key) {
         if (parameters.get(key) == null) {
-            throw new IllegalStateException(String.format("Parameter '%s' must be set before continuing!", key));
+            throw new IllegalArgumentException(String.format("Parameter '%s' must be set before continuing!", key));
+        }
+    }
+
+    private void checkMethod() {
+        if (parameters.containsKey(METHOD)) {
+            throw new IllegalArgumentException(String.format("Method '%s' already set!", parameters.get(METHOD)));
         }
     }
 
@@ -220,7 +278,7 @@ public class SignatureRequestBuilder {
         while (iterator.hasNext()) {
             Map.Entry<String, Object> entry = iterator.next();
             signatureBase.append("\"")
-                    .append(entry.getKey().toLowerCase())
+                    .append(entry.getKey().toLowerCase())   // headers nee to be lower case
                     .append("\": ")
                     .append(entry.getValue());
 
@@ -232,8 +290,20 @@ public class SignatureRequestBuilder {
         return signatureBase.toString();
     }
 
+    /**
+     * Content digest calculated with SHA-512
+     *
+     * @param content to create digest for
+     * @return content digest
+     * @throws NoSuchAlgorithmException in case digest can't be calculated
+     */
     protected static String digestContentSha512(String content) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-512");
+
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("Content must not be null or empty!");
+        }
+
+        MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM.toUpperCase());
         byte[] bodyBytes = content.getBytes(StandardCharsets.UTF_8);
         byte[] hashedBytes = digest.digest(bodyBytes);
         return Base64.getEncoder().encodeToString(hashedBytes);
@@ -247,7 +317,7 @@ public class SignatureRequestBuilder {
      */
     protected String getSignature() {
         try {
-            Signature signature = Signature.getInstance("Ed25519");
+            Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
             signature.initSign(privateKey);
             signature.update(getSignatureBase().getBytes(StandardCharsets.UTF_8));
             byte[] signatureBytes = signature.sign();
@@ -267,15 +337,17 @@ public class SignatureRequestBuilder {
         LinkedHashMap<String, String> headers = new LinkedHashMap<>();
         headers.put(ACCEPT_HEADER, APPLICATION_JSON);
 
-        if (parameters.get(CONTENT_LENGTH_HEADER) != null) {
+        if (parameters.containsKey(CONTENT_LENGTH_HEADER)) {
             headers.put(CONTENT_TYPE_HEADER, parameters.get(CONTENT_TYPE_HEADER).toString());
         }
 
-        if (parameters.get(CONTENT_DIGEST_HEADER) != null) {
+        if (parameters.containsKey(CONTENT_DIGEST_HEADER)) {
             headers.put(CONTENT_DIGEST_HEADER, parameters.get(CONTENT_DIGEST_HEADER).toString());
         }
 
-        // TODO: add token header option
+        if (parameters.containsKey(AUTHORIZATION_HEADER)) {
+            headers.put(AUTHORIZATION_HEADER, parameters.get(AUTHORIZATION_HEADER).toString());
+        }
 
         headers.put(SIGNATURE_INPUT_HEADER, getSignatureParamsHeader());
         headers.put(SIGNATURE_HEADER, getSignatureHeader());
@@ -293,19 +365,23 @@ public class SignatureRequestBuilder {
      * @return request
      */
     public HttpRequest getRequest(InterledgerClientOptions options) {
+        return getBuilder(options).build();
+    }
+
+    public HttpRequest.Builder getBuilder(InterledgerClientOptions options) {
+        // build if not already
+        if (parameters.get(SIGNATURE_PARAMS) == null) {
+            build();
+        }
 
         checkIsBuild();
 
-        // sign the request
         HttpRequest.Builder builder = HttpRequest.newBuilder(getTarget());
         for (Map.Entry<String, String> entry : getHeaders().entrySet()) {
             builder.header(entry.getKey(), entry.getValue());
         }
 
         switch (getMethod()) {
-            case "GET":
-                builder.GET();
-                break;
             case "POST":
                 if (body == null || body.isBlank()) {
                     builder.POST(HttpRequest.BodyPublishers.noBody());
@@ -320,15 +396,12 @@ public class SignatureRequestBuilder {
                     builder.PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
                 }
                 break;
-            case "DELETE":
-                builder.DELETE();
-                break;
-            case "HEAD":
-                builder.HEAD();
+            default:
+                builder.method(getMethod(), HttpRequest.BodyPublishers.noBody());
                 break;
         }
 
         builder.timeout(Duration.of(options.timeOutInSeconds, SECONDS));
-        return builder.build();
+        return builder;
     }
 }

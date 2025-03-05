@@ -35,13 +35,13 @@ public interface InterledgerApiClient {
      * Step 2 (RECEIVER)
      * Create an incoming payment request (from some wallet to the receiving wallet)
      *
-     * @param grantToken to create an incoming payment request on the receiver wallet
-     * @param receiver   wallet
-     * @param amount     amount with two decimal spaces
+     * @param receiver     wallet
+     * @param pendingGrant grant request holding token
+     * @param amount       amount with two decimal spaces
      * @return incoming payment request that will be used on sender wallet
      * @throws InterledgerClientException
      */
-    IncomingPayment createIncomingPayment(String grantToken, PaymentPointer receiver, BigDecimal amount) throws InterledgerClientException;
+    IncomingPayment createIncomingPayment(PaymentPointer receiver, PendingGrant pendingGrant, BigDecimal amount) throws InterledgerClientException;
 
     /**
      * Step 3 (SENDER)
