@@ -15,11 +15,14 @@ import java.util.logging.Logger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class InterledgerApiClientImplTest {
+/**
+ * Integration test for Interledger API client
+ */
+class InterledgerApiClientImplIT {
 
     private InterledgerApiClientImpl client;
 
-    private static final Logger log = Logger.getLogger(InterledgerApiClientImplTest.class.getName());
+    private static final Logger log = Logger.getLogger(InterledgerApiClientImplIT.class.getName());
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -30,15 +33,43 @@ class InterledgerApiClientImplTest {
                 TestHelper.CLIENT_KEY_ID);
     }
 
+    @Test
+    public void getClientWallet() throws InterledgerClientException {
+
+        PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.CLIENT_WALLET_ADDRESS));
+        assertNotNull(wallet);
+
+        assertEquals(URI.create(TestHelper.CLIENT_WALLET_ADDRESS), wallet.address);
+        assertEquals("Fliqa payment initiator", wallet.publicName);
+        assertEquals("EUR", wallet.assetCode);
+        assertEquals(2, wallet.assetScale);
+        assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
+        assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
+    }
+
     // Get receiver wallet data
     @Test
-    public void getWallet() throws InterledgerClientException {
+    public void getReceiverWallet() throws InterledgerClientException {
 
         PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS));
         assertNotNull(wallet);
 
-        assertEquals(URI.create("https://ilp.interledger-test.dev/reciever"), wallet.address);
-        assertEquals("reciever", wallet.publicName);
+        assertEquals(URI.create(TestHelper.RECEIVER_WALLET_ADDRESS), wallet.address);
+        assertEquals("Fliqa receiver", wallet.publicName);
+        assertEquals("EUR", wallet.assetCode);
+        assertEquals(2, wallet.assetScale);
+        assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
+        assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
+    }
+
+    @Test
+    public void getSenderWallet() throws InterledgerClientException {
+
+        PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.SENDER_WALLET_ADDRESS));
+        assertNotNull(wallet);
+
+        assertEquals(URI.create(TestHelper.SENDER_WALLET_ADDRESS), wallet.address);
+        assertEquals("Fliqa sender", wallet.publicName);
         assertEquals("EUR", wallet.assetCode);
         assertEquals(2, wallet.assetScale);
         assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
@@ -75,9 +106,10 @@ class InterledgerApiClientImplTest {
 
         // 5. continue / get redirect interact
         OutgoingPayment continueInteract = client.continueGrant(senderWallet, quote);
-        log.info(String.format("CLICK ON LINK: %s", continueInteract.interact.redirect));
 
-        log.info("CONTINUE TOKEN: " + continueInteract.paymentContinue.access.token);
+        log.info("********");
+        log.info(String.format("CLICK ON LINK: %s", continueInteract.interact.redirect));
+        log.info("********");
 
         // Wait for the user to press a button before proceeding
         JOptionPane.showMessageDialog(null,

@@ -8,8 +8,6 @@ import java.util.Base64;
 /**
  * References to test wallet setup on
  * https://wallet.interledger-test.dev/account/29c7f1fe-22a2-4d90-9ba7-ec99aad7f318
- * <p>
- * Log in with: andrej@fliqa.io
  */
 public final class TestHelper {
 
@@ -17,18 +15,19 @@ public final class TestHelper {
         // hide constructor
     }
 
-    public static String CLIENT_WALLET_ADDRESS = "https://ilp.interledger-test.dev/andrejfliqatestwallet";
+    public static String CLIENT_WALLET_ADDRESS = "https://ilp.interledger-test.dev/fliqa-initiator";
 
     // this is a test private key so it can be included in source control / otherwise this is not good practice
     private static String CLIENT_PRIVATE_KEY = """
             -----BEGIN PRIVATE KEY-----
-            MC4CAQAwBQYDK2VwBCIEIMoPnUbc3RNGyN1tiB9gEVcjrq4kCi1CAnFwqhl9GsZ+
-            -----END PRIVATE KEY-----""";
+            MC4CAQAwBQYDK2VwBCIEIEfIalZwF5+mHSSxN9+v9h601DjAIa4CvBVD4Pb3I/AV
+            -----END PRIVATE KEY-----
+            """;
 
-    public static String CLIENT_KEY_ID = "89675b1d-53f3-4fb6-b8ea-33a56e576cef";
+    public static String CLIENT_KEY_ID = "761fbd9c-16a6-4e19-a4cf-0f4076d78469";
 
-    public static String SENDER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/sender";
-    public static String RECEIVER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/receiver";
+    public static String SENDER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/fliqa-sender";
+    public static String RECEIVER_WALLET_ADDRESS = "https://ilp.interledger-test.dev/fliqa-receiver";
 
     public static PrivateKey getPrivateKey() throws Exception {
         // Remove PEM headers and decode Base64

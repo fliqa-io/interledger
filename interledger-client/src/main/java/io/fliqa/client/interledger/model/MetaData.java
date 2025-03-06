@@ -12,5 +12,6 @@ public class MetaData {
     public String externalId;
 
     @JsonProperty(value = "value")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Set<MetaDataItem> value;
 }

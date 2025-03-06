@@ -4,6 +4,7 @@ import io.fliqa.client.interledger.exception.InterledgerClientException;
 import io.fliqa.client.interledger.model.*;
 import io.fliqa.client.interledger.signature.SignatureRequestBuilder;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -11,21 +12,20 @@ import java.net.http.HttpResponse;
 import java.security.PrivateKey;
 import java.time.Duration;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class InterledgerApiClientImpl implements InterledgerApiClient {
 
-    private final Logger log = Logger.getLogger(InterledgerApiClientImpl.class.getName());
+    //  private final Logger log = Logger.getLogger(InterledgerApiClientImpl.class.getName());
 
     private final WalletAddress clientWallet;
     private final PrivateKey privateKey;
     private final String keyId;
-    private final InterledgerClientOptions options;
-    private final InterledgerObjectMapper mapper = new InterledgerObjectMapper();
 
     private final HttpClient client;
+    private final InterledgerClientOptions options;
+    private final InterledgerObjectMapper mapper = new InterledgerObjectMapper();
 
     public InterledgerApiClientImpl(WalletAddress clientWallet,
                                     PrivateKey privateKey,
@@ -132,7 +132,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                         sender.address, quote.debitAmount)
                 .redirectInteract();
 
-        log.info(String.format("POST: %s", mapper.writeValueAsString(accessRequest)));
+        // log.info(String.format("POST: %s", mapper.writeValueAsString(accessRequest)));
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(accessRequest)
@@ -144,9 +144,6 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public AccessGrant finalizeGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException {
-
-        log.info(String.format("POST: %s", mapper.writeValueAsString(outgoingPayment)));
-        log.info(String.format("token: %s", outgoingPayment.paymentContinue.access.token));
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST()
@@ -163,16 +160,11 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         outgoingPayment.quoteId = quote.id;
         outgoingPayment.walletAddress = senderWallet.address;
 
-        log.info(String.format("POST: %s", mapper.writeValueAsString(outgoingPayment)));
-        log.info(String.format("token: %s", finalizedGrant.access.token));
-
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(outgoingPayment)
                 .target(senderWallet.resourceServer + "/outgoing-payments")
                 .accessToken(finalizedGrant.access.token)
                 .getRequest(options);
-
-        log.info(String.format("Outgoing payment request: %s", mapper.writeValueAsString(outgoingPayment)));
 
         return send(request, FinalizedPayment.class);
     }
@@ -180,18 +172,73 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     public <T> T send(HttpRequest request, Class<T> responseType) throws InterledgerClientException {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            log.info(String.format("[%d]: %s", response.statusCode(), response.body()));
+            // log.info(String.format("[%d]: %s", response.statusCode(), response.body()));
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new InterledgerClientException(response.body());
+                // deserialize error and throw exception
+                ApiError error = mapper.readValue(response.body(), ApiError.class);
+                throw getApiException(error, response);
             }
 
+            // deserialize
             return mapper.readValue(response.body(), responseType);
-            // TODO: check response code before deserialization
-            // in case of ERROR log and deserialize error and throw appropriate exception
-        } catch (Exception e) {
-            log.warning(String.format("Request failed: %s.", e));
-            throw new InterledgerClientException(e.getMessage(), e);
+
+        } catch (IOException e) {
+            throw new InterledgerClientException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new InterledgerClientException(e);
         }
+    }
+
+    protected InterledgerClientException getApiException(ApiError error, HttpResponse<String> response) throws IOException {
+        String message = formatExceptionMessage(error, response.statusCode());
+        String body = response.body();
+        if (response.body() == null) {
+            body = "[no body]";
+        }
+
+        return new InterledgerClientException(response.statusCode(), message, response.headers(), body);
+    }
+
+    private String formatExceptionMessage(ApiError error, int statusCode) {
+
+        String code = error.code == null || error.code.isBlank() ? ">no error code<" : error.code;
+        String description = error.description == null || error.description.isBlank() ? ">no error description<" : error.description;
+
+        return "[" + statusCode + "](" + code + ") " + description;
+    }
+
+    private void logRequest(HttpRequest request, String body) {
+        StringBuilder logMessage = new StringBuilder();
+        logMessage.append("HTTP Request: ").append(request.method()).append(" ").append(request.uri())
+                .append(System.lineSeparator());
+
+        request.headers().map().forEach((name, values) -> {
+            logMessage.append(name).append(": ").append(String.join(", ", values))
+                    .append(System.lineSeparator());
+        });
+
+        if (body != null) {
+            logMessage.append("Body: ").append(body)
+                    .append(System.lineSeparator());
+        }
+
+        //  LOGGER.info(logMessage.toString());
+    }
+
+    private void logResponse(HttpResponse<String> response) {
+        StringBuilder logMessage = new StringBuilder();
+        logMessage.append("HTTP Response: ").append(response.statusCode()).append(System.lineSeparator());
+
+        response.headers().map().forEach((name, values) -> {
+            logMessage.append(name).append(": ").append(String.join(", ", values)).append(System.lineSeparator());
+        });
+
+        logMessage.append("Body: ")
+                .append(response.body())
+                .append(System.lineSeparator());
+
+        //  LOGGER.info(logMessage.toString());
     }
 }

@@ -6,11 +6,29 @@ import io.fliqa.client.interledger.model.*;
 import java.math.BigDecimal;
 
 /**
- * Client that communicates with Interledger backend
- * - must be configured with clientWallet, privateKey, keyId
+ * Client that communicates with Interledger backend(s)
+ * NOTE: this client is intended for Fliqa's use-cases only and does not support all Interledger flows
+ * <p>
+ * - must be configured with clientWallet, privateKey, keyId (this is the payment initiator)
  * - client is the third party that only acts as a facilitator between the sender and receiver of the payment
+ * <p>
+ * - the following flow is currently supported:
+ * - Fliqa starts a payment where Tenant is the receiver (beneficiary)
+ * - Fliqa creates a grant and starts the payment
+ * - The sender (payee) must enter his payment pointer (wallet) to allow sending funds
+ * - The sender gets a redirect link where he confirms the payment
+ * - Fliqa finishes the payment
  */
 public interface InterledgerApiClient {
+
+    static final int BAD_REQUEST = 400;
+    static final int UNAUTHORIZED = 401;
+    static final int FORBIDDEN = 403;
+    static final int NOT_FOUND = 404;
+    static final int INTERNAL_SERVER_ERROR = 500;
+    static final int BAD_GATEWAY = 502;
+    static final int SERVICE_UNAVAILABLE = 503;
+    static final int GATEWAY_TIMEOUT = 504;
 
     /**
      * Step 0
@@ -89,7 +107,6 @@ public interface InterledgerApiClient {
 
     /**
      * Step 7 (CLIENT)
-     * Finalize payment
      *
      * @param finalized    grant for finalizing payment
      * @param senderWallet

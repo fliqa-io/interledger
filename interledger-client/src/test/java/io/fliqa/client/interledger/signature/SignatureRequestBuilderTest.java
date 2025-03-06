@@ -34,15 +34,15 @@ class SignatureRequestBuilderTest {
                         "\"content-digest\": sha-512=:v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==:\n" +
                         "\"content-length\": 162\n" +
                         "\"content-type\": application/json\n" +
-                        "\"@signature-params\": (\"@method\" \"@target-uri\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"89675b1d-53f3-4fb6-b8ea-33a56e576cef\";created=" + createdTime,
+                        "\"@signature-params\": (\"@method\" \"@target-uri\" \"content-digest\" \"content-length\" \"content-type\");keyid=\"761fbd9c-16a6-4e19-a4cf-0f4076d78469\";created=" + createdTime,
                 base);
 
         String signature = builder.getSignature();
-        assertEquals("Muxo74zrmuf2gvAt5/mMd/BSKxMU4G80jhOHyCpzFocBQ0cnkRIej4NYYqS9fWkhfxAZD3T1mItYVRIh3gQ8Ag==", signature);
+        assertEquals("LZyYeDxkEkKOYV1Xu8+G2RsjpTj/M3nJa6EBSS/SUOHPeeJlLzMdjSkYvwFvAul/0lMoOVEPsKBes30QkRqxAQ==", signature);
 
         // check headers
         LinkedHashMap<String, String> headers = builder.getHeaders();
-        assertEquals("sig1=:Muxo74zrmuf2gvAt5/mMd/BSKxMU4G80jhOHyCpzFocBQ0cnkRIej4NYYqS9fWkhfxAZD3T1mItYVRIh3gQ8Ag==:", headers.get(SIGNATURE_HEADER));
+        assertEquals("sig1=:LZyYeDxkEkKOYV1Xu8+G2RsjpTj/M3nJa6EBSS/SUOHPeeJlLzMdjSkYvwFvAul/0lMoOVEPsKBes30QkRqxAQ==:", headers.get(SIGNATURE_HEADER));
         assertEquals("sha-512=:v2baXKn2bRWwis7fZwF4sB8B7I7izwCA5kybiVdCVb8nhD2kd0qf07hgK+p1Jaa00wQiEmOXKzlS6gurYKdBHA==:", headers.get(CONTENT_DIGEST_HEADER));
         assertEquals("application/json", headers.get(CONTENT_TYPE_HEADER));
         assertEquals("application/json", headers.get(ACCEPT_HEADER));
@@ -62,6 +62,6 @@ class SignatureRequestBuilderTest {
                 .build(1741002284L);
 
         String signature = builder.getSignature();
-        assertEquals("eJRoTpNxgTK88ujbipcn0/8TDf0oUhbqTgOoKcOFnUslyNYYBk7Ar/5Mw8HvBubrQMbGt+AcjONb/6sKC8IXAQ==", signature);
+        assertEquals("7NHDvPz0p3lVPCb+T4z+AK/V6x0jrO8KZu7W/F+t0LbahVnfBi/8YDXSt6EjpXoZp2pIZe2hc2tm9GGUvCH5AA==", signature);
     }
 }
