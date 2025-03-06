@@ -16,18 +16,20 @@ java {
     }
 }
 
-// Exclude Integration tests from test task
-tasks.named<Test>("test") {
-    exclude("**/*IT.class")
+testing {
+    suites {
+        val test by getting(JvmTestSuite::class) {
+            useJUnitJupiter()
+        }
+    }
 }
 
-tasks.test {
-    useJUnitPlatform()
+tasks.named<Test>("test") {
+    exclude("**/*IT.class")  // Exclude integration tests
 }
 
 val jacksonVersion = "2.17.1"
 val junitVersion = "5.10.2"
-
 val jbosLoggerVersion = "3.1.2.Final"
 
 dependencies {
