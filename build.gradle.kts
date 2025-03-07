@@ -94,8 +94,6 @@ dependencies {
     "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 }
 
-// Add this at the end of your build.gradle.kts file
-
 publishing {
     repositories {
         maven {
