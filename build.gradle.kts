@@ -3,7 +3,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "io.fliqa.client.interledger"
+group = "io.fliqa.client"
 version = "1.0.0-SNAPSHOT"
 
 repositories {
