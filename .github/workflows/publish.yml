@@ -30,7 +30,6 @@ jobs:
           echo "Version for release: $RELEASE_VERSION"
 
       - name: Publish to GitHub Packages
-        run: ./gradlew publish -Pversion=$RELEASE_VERSION
+        run: ./gradlew publish -Pversion=${{ env.RELEASE_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
