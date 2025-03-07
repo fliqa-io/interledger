@@ -5,14 +5,13 @@ import io.fliqa.client.interledger.model.AccessGrant;
 import io.fliqa.client.interledger.model.PaymentPointer;
 import io.fliqa.client.interledger.model.WalletAddress;
 import io.fliqa.interledger.TestHelper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.security.PrivateKey;
-import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
@@ -22,12 +21,11 @@ class InterledgerApiClientImplIT {
 
     private InterledgerApiClientImpl client;
 
-    private static final Logger log = Logger.getLogger(InterledgerApiClientImplIT.class.getName());
-
     @BeforeEach
     public void setUp() throws Exception {
         PrivateKey privateKey = TestHelper.getPrivateKey();
         WalletAddress clientWallet = new WalletAddress(TestHelper.CLIENT_WALLET_ADDRESS);
+
         client = new InterledgerApiClientImpl(clientWallet,
                 privateKey,
                 TestHelper.CLIENT_KEY_ID);
@@ -39,12 +37,12 @@ class InterledgerApiClientImplIT {
         PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.CLIENT_WALLET_ADDRESS));
         assertNotNull(wallet);
 
-        assertEquals(URI.create(TestHelper.CLIENT_WALLET_ADDRESS), wallet.address);
-        assertEquals("Fliqa payment initiator", wallet.publicName);
-        assertEquals("EUR", wallet.assetCode);
-        assertEquals(2, wallet.assetScale);
-        assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
-        assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
+        Assertions.assertEquals(URI.create(TestHelper.CLIENT_WALLET_ADDRESS), wallet.address);
+        Assertions.assertEquals("Fliqa payment initiator", wallet.publicName);
+        Assertions.assertEquals("EUR", wallet.assetCode);
+        Assertions.assertEquals(2, wallet.assetScale);
+        Assertions.assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
+        Assertions.assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
     }
 
     // Get receiver wallet data
@@ -54,12 +52,12 @@ class InterledgerApiClientImplIT {
         PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS));
         assertNotNull(wallet);
 
-        assertEquals(URI.create(TestHelper.RECEIVER_WALLET_ADDRESS), wallet.address);
-        assertEquals("Fliqa receiver", wallet.publicName);
-        assertEquals("EUR", wallet.assetCode);
-        assertEquals(2, wallet.assetScale);
-        assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
-        assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
+        Assertions.assertEquals(URI.create(TestHelper.RECEIVER_WALLET_ADDRESS), wallet.address);
+        Assertions.assertEquals("Fliqa receiver", wallet.publicName);
+        Assertions.assertEquals("EUR", wallet.assetCode);
+        Assertions.assertEquals(2, wallet.assetScale);
+        Assertions.assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
+        Assertions.assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
     }
 
     @Test
@@ -68,12 +66,12 @@ class InterledgerApiClientImplIT {
         PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.SENDER_WALLET_ADDRESS));
         assertNotNull(wallet);
 
-        assertEquals(URI.create(TestHelper.SENDER_WALLET_ADDRESS), wallet.address);
-        assertEquals("Fliqa sender", wallet.publicName);
-        assertEquals("EUR", wallet.assetCode);
-        assertEquals(2, wallet.assetScale);
-        assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
-        assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
+        Assertions.assertEquals(URI.create(TestHelper.SENDER_WALLET_ADDRESS), wallet.address);
+        Assertions.assertEquals("Fliqa sender", wallet.publicName);
+        Assertions.assertEquals("EUR", wallet.assetCode);
+        Assertions.assertEquals(2, wallet.assetScale);
+        Assertions.assertEquals(URI.create("https://auth.interledger-test.dev"), wallet.authServer);
+        Assertions.assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
     }
 
     // Step 1: Get a grant for the incoming payment, so we can create the incoming payment on the receiving wallet address
