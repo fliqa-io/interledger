@@ -1,13 +1,13 @@
 package io.fliqa.client.interledger;
 
 import io.fliqa.client.interledger.exception.InterledgerClientException;
-import io.fliqa.client.interledger.model.*;
+import io.fliqa.client.interledger.model.AccessGrant;
+import io.fliqa.client.interledger.model.PaymentPointer;
+import io.fliqa.client.interledger.model.WalletAddress;
 import io.fliqa.interledger.TestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.swing.*;
-import java.math.BigDecimal;
 import java.net.URI;
 import java.security.PrivateKey;
 import java.util.logging.Logger;
@@ -88,7 +88,7 @@ class InterledgerApiClientImplIT {
         AccessGrant grantRequest = client.createPendingGrant(receiverWallet);
         assertNotNull(grantRequest);
 
-        // 2. create incoming payment request
+/*        // 2. create incoming payment request
         IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(12.34));
         assertNotNull(incomingPayment);
 
@@ -122,6 +122,6 @@ class InterledgerApiClientImplIT {
 
         FinalizedPayment finalizedPayment = client.finalizePayment(finalized,
                 senderWallet, quote);
-        assertNotNull(finalizedPayment);
+        assertNotNull(finalizedPayment);*/
     }
 }

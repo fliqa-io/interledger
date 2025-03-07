@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- ConsoleAppender for logging to the console -->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Set the log level to TRACE for the logger -->
+    <logger name="io.fliqa.client.interledger" level="DEBUG"/>
+    <!-- Root logger configuration -->
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+    </root>
+</configuration>

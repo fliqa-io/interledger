@@ -1,6 +1,10 @@
 package io.fliqa.client.interledger.exception;
 
+import io.fliqa.client.interledger.model.ApiError;
+
+import java.io.IOException;
 import java.net.http.HttpHeaders;
+import java.net.http.HttpResponse;
 
 public class InterledgerClientException extends Exception {
 
@@ -73,5 +77,23 @@ public class InterledgerClientException extends Exception {
      */
     public String getResponseBody() {
         return responseBody;
+    }
+
+    public static InterledgerClientException getApiException(ApiError error, HttpResponse<String> response) throws IOException {
+        String message = formatExceptionMessage(error, response.statusCode());
+        String body = response.body();
+        if (response.body() == null) {
+            body = "[no body]";
+        }
+
+        return new InterledgerClientException(response.statusCode(), message, response.headers(), body);
+    }
+
+    private static String formatExceptionMessage(ApiError error, int statusCode) {
+
+        String code = error.code == null || error.code.isBlank() ? ">no error code<" : error.code;
+        String description = error.description == null || error.description.isBlank() ? ">no error description<" : error.description;
+
+        return "[" + statusCode + "](" + code + ") " + description;
     }
 }

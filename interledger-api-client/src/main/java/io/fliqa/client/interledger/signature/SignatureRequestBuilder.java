@@ -33,9 +33,9 @@ public class SignatureRequestBuilder {
     static final String SIGNATURE_INPUT_HEADER = "Signature-Input";
     static final String SIGNATURE_HEADER = "Signature";
     static final String AUTHORIZATION_HEADER = "Authorization";
-    static final String ACCEPT_HEADER = "Accept";
+    public static final String ACCEPT_HEADER = "Accept";
 
-    static final String APPLICATION_JSON = "application/json";
+    public static final String APPLICATION_JSON = "application/json";
 
     static final String DEFAULT_SIGNATURE_ID = "sig1";
 
@@ -386,24 +386,10 @@ public class SignatureRequestBuilder {
             builder.header(entry.getKey(), entry.getValue());
         }
 
-        switch (getMethod()) {
-            case "POST":
-                if (body == null || body.isBlank()) {
-                    builder.POST(HttpRequest.BodyPublishers.noBody());
-                } else {
-                    builder.POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
-                }
-                break;
-            case "PUT":
-                if (body == null || body.isBlank()) {
-                    builder.PUT(HttpRequest.BodyPublishers.noBody());
-                } else {
-                    builder.PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
-                }
-                break;
-            default:
-                builder.method(getMethod(), HttpRequest.BodyPublishers.noBody());
-                break;
+        if (body == null || body.isBlank()) {
+            builder.method(getMethod(), HttpRequest.BodyPublishers.noBody());
+        } else {
+            builder.method(getMethod(), HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8));
         }
 
         builder.timeout(Duration.of(options.timeOutInSeconds, SECONDS));

@@ -21,15 +21,8 @@ import java.math.BigDecimal;
  */
 public interface InterledgerApiClient {
 
-    static final int BAD_REQUEST = 400;
-    static final int UNAUTHORIZED = 401;
-    static final int FORBIDDEN = 403;
-    static final int NOT_FOUND = 404;
-    static final int INTERNAL_SERVER_ERROR = 500;
-    static final int BAD_GATEWAY = 502;
-    static final int SERVICE_UNAVAILABLE = 503;
-    static final int GATEWAY_TIMEOUT = 504;
-
+    int INTERNAL_SERVER_ERROR = 500;
+   
     /**
      * Step 0
      *
