@@ -33,5 +33,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-        run: ./gradlew publish
-        # -Prelease.version=${RELEASE_VERSION}
+        run: ./gradlew publish -Prelease.version=2.0.0
