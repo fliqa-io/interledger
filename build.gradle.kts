@@ -93,3 +93,45 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 }
+
+// Add this at the end of your build.gradle.kts file
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url =
+                uri("https://maven.pkg.github.com/${project.findProperty("github.repository") ?: System.getenv("GITHUB_REPOSITORY") ?: "fliqa-io/interledger"}")
+            credentials {
+                username = project.findProperty("github.username") as String? ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("github.token") as String? ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+
+            pom {
+                name.set("Interledger API Client")
+                description.set("Java client for Interledger Open Payments protocol")
+                url.set("https://github.com/fliqa-io/interledger")
+
+                developers {
+                    developer {
+                        id.set("azavrsnik")
+                        name.set("Andrej Završnik")
+                        email.set("andrej@fliqa.io")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/fliqa-io/interledger.git")
+                    developerConnection.set("scm:git:ssh://github.com/fliqa-io/interledger.git")
+                    url.set("https://github.com/fliqa-io/interledger")
+                }
+            }
+        }
+    }
+}
