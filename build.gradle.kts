@@ -4,11 +4,11 @@ plugins {
 }
 
 group = "io.fliqa.client"
+version = "1.0.0-SNAPSHOT"
 
 // Take version from parameter or set default
-val projectVersion = project.findProperty("release.version") as String? ?: "1.0.0-SNAPSHOT"
+val projectVersion = project.findProperty("release.version") as String? ?: version
 version = projectVersion
-
 
 repositories {
     mavenCentral()
