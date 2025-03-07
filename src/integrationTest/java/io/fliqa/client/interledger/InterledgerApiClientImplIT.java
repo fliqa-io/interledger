@@ -1,23 +1,27 @@
 package io.fliqa.client.interledger;
 
 import io.fliqa.client.interledger.exception.InterledgerClientException;
-import io.fliqa.client.interledger.model.AccessGrant;
-import io.fliqa.client.interledger.model.PaymentPointer;
-import io.fliqa.client.interledger.model.WalletAddress;
+import io.fliqa.client.interledger.model.*;
 import io.fliqa.interledger.TestHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
+import javax.swing.*;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.security.PrivateKey;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Integration test for Interledger API client
  */
 class InterledgerApiClientImplIT {
+
+    private static final Logger log = getLogger(InterledgerApiClientImplIT.class);
 
     private InterledgerApiClientImpl client;
 
@@ -86,7 +90,7 @@ class InterledgerApiClientImplIT {
         AccessGrant grantRequest = client.createPendingGrant(receiverWallet);
         assertNotNull(grantRequest);
 
-/*        // 2. create incoming payment request
+        // 2. create incoming payment request
         IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(12.34));
         assertNotNull(incomingPayment);
 
@@ -115,11 +119,21 @@ class InterledgerApiClientImplIT {
                         "then press OK once you've completed the action at the provided link.");
 
         // 6. finish payment
+        // TODO: check if accepted then we can finalize it (otherwise this will fail)
+
         AccessGrant finalized = client.finalizeGrant(continueInteract);
         assertNotNull(finalized);
 
         FinalizedPayment finalizedPayment = client.finalizePayment(finalized,
                 senderWallet, quote);
-        assertNotNull(finalizedPayment);*/
+        assertNotNull(finalizedPayment);
+    }
+
+    @Test
+    void getPaymentStatus() throws InterledgerClientException {
+        PaymentPointer senderWallet = client.getWallet(new WalletAddress(TestHelper.SENDER_WALLET_ADDRESS));
+        assertNotNull(senderWallet);
+
+        // TODO: implement call to get payment status 
     }
 }

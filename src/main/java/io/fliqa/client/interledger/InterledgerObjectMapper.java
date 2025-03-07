@@ -17,6 +17,9 @@ import static io.fliqa.client.interledger.InterledgerApiClient.INTERNAL_SERVER_E
 
 /**
  * Wrapper around ObjectMapper to provide default mapping and catch serialization/deserialization exceptions
+ * We have two mappers:
+ * - mapper           - standard mapper
+ * - unwrapRootMapper - deserializes content of root JSON element
  */
 public class InterledgerObjectMapper {
 

@@ -1,2 +1,2 @@
-rootProject.name = "interledger-api-client"
+rootProject.name = "interledger"
 
