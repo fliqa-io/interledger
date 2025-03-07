@@ -1,10 +1,7 @@
-name: Build Interledger API client
+name: Publish Interledger API client
 
 on:
   workflow_dispatch:
-
-  push:
-    branches: [ main ]
 
 jobs:
   build:
@@ -22,5 +19,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle (skipping integration tests)
-        run: ./gradlew build -x integrationTest
+      - name: Publish to GitHub Packages
+        run: ./gradlew publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
