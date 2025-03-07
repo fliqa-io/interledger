@@ -32,16 +32,6 @@ sourceSets {
     }
 }
 
-// Create a configuration for integration test implementation dependencies
-configurations {
-    val integrationTestImplementation by getting {
-        extendsFrom(configurations.testImplementation.get())
-    }
-    val integrationTestRuntimeOnly by getting {
-        extendsFrom(configurations.testRuntimeOnly.get())
-    }
-}
-
 // Create custom integrationTest task
 tasks.register<Test>("integrationTest") {
     description = "Runs the integration tests."
@@ -80,16 +70,15 @@ dependencies {
 
     // Unit tests
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     testImplementation("ch.qos.logback:logback-classic:$logbackClassicVersion")
 
-    // Integration tests - explicitly declare test framework dependencies
+    // Use the integrationTest source set for integration test dependencies
     "integrationTestImplementation"("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    "integrationTestRuntimeOnly"("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+    "integrationTestImplementation"("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     "integrationTestImplementation"("ch.qos.logback:logback-classic:$logbackClassicVersion")
     "integrationTestImplementation"(project(":"))
 
     // Needed for Gradle 9.0
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 }
