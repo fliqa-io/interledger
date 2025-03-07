@@ -19,7 +19,15 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Extract version from release tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Publish to GitHub Packages
-        run: ./gradlew publish
+        run: ./gradlew publish -Pversion=$RELEASE_VERSION
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
