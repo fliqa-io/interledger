@@ -29,7 +29,7 @@ We have three "players":
     - MXN (Mexican Peso)
 - **payment pointer** = account number / wallet address (aka where the assets are deposited/withdrawn)
     - this is typically a URL address
-- **account** = holds one or multiple placement pointers and is locked to an asset type
+- **account** = holds one or multiple payment pointers and is locked to an asset type
 - **quote** = transaction fee
 
 ### 1. Fliqa initiates payment
@@ -39,22 +39,22 @@ Using Fliqa's **private key** and **key id** and the _receiver_ **payment pointe
 - get a grand request
 - create an incoming payment to the _recevier_ wallet (aka payment pointer)
 
-> NOTE: The receiver payment pointer is already entered in the Tenant's Point of sale (same as IBAN).
+> **NOTE:** The receiver payment pointer is already entered in the Tenant's Point of sale (same as IBAN).
 
 ### 2. Fliqa creates a quote request
 
 A quote is the cost of the transaction (aka fee) from the sender to the receiver payment pointer (wallet).  
 In order to do this we need the sender payment pointer.
 
-> NOTE: This is the point where the sender enters his payment pointer / same as entering IBAN
+> **NOTE:** This is the point where the sender enters his payment pointer / same as entering IBAN
 
 The quote is made for the incoming payment on the _sender_ **payment pointer**
 
 ### 3. Redirect user to confirm the payment
 
 Once we have the quote we can create a redirect link for the sender to confirm the payment.
-
-> NOTE: User is redirected to his wallet where he confirms / denies the payment
+  
+> **NOTE:** User is redirected to his wallet where he confirms / denies the payment
 
 ### 4. Finalization of payment
 
