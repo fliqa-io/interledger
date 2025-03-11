@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="io.fliqa.client.interledger" level="DEBUG"/>
+    <logger name="io.fliqa.client.interledger" level="TRACE"/>
 
     <root level="INFO">
         <appender-ref ref="Console"/>

@@ -32,19 +32,20 @@ public class HttpLogger {
 
         if (logger.isTraceEnabled()) {  // log request details only if trace level is enabled
             logHeaders(req.headers(), logMessage);
-
             // define a consumer for how you want to log
-            Consumer<String> bodyConsumer = body -> {
-                if (body != null && !body.isBlank()) {
-                    logMessage.append(System.lineSeparator()).append(LOG_SPACE).append(LOG_BODY).append(body);
-                }
-
-                logger.trace(logMessage.toString());
-            };
             if (req.bodyPublisher().isPresent()) {
+                Consumer<String> bodyConsumer = body -> {
+                    if (body != null && !body.isBlank()) {
+                        logMessage.append(System.lineSeparator()).append(LOG_SPACE).append(LOG_BODY).append(body);
+                    }
+
+                    logger.trace(logMessage.toString());
+                };
+
                 req.bodyPublisher().get().subscribe(new HttpBodySubscriber(bodyConsumer));
             } else {
-                bodyConsumer.accept(LOG_NO_BODY);
+                logMessage.append(System.lineSeparator()).append(LOG_SPACE).append(LOG_NO_BODY);
+                logger.trace(logMessage.toString());
             }
         } else {
             logger.debug(logMessage.toString());

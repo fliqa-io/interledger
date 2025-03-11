@@ -14,13 +14,13 @@ class ApiErrorTest {
 
     @Test
     void testDeserialization() throws InterledgerClientException {
-        ApiError error = mapper.readError(JSON_ERROR_NO_CODE);
+        ApiError error = mapper.readError(JSON_ERROR_NO_CODE, 400);
 
         assertNotNull(error);
         assertEquals("Received error validating OpenAPI request: body must have required property 'access_token'", error.description);
         assertNull(error.code);
 
-        error = mapper.readError(JSON_ERROR_WITH_CODE);
+        error = mapper.readError(JSON_ERROR_WITH_CODE, 400);
         assertNotNull(error);
         assertEquals("invalid signature", error.description);
         assertEquals("invalid_client", error.code);

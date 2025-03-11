@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.net.URI;
 import java.time.Instant;
 
-public class FinalizedPayment {
+public class Payment {
 
     @JsonProperty(value = "id", required = true)
     public URI id;
@@ -19,7 +19,7 @@ public class FinalizedPayment {
     public URI quoteId;
 
     @JsonProperty("failed")
-    public boolean failed;
+    public Boolean failed;
 
     @JsonProperty(value = "receiver", required = true)
     public URI receiver;

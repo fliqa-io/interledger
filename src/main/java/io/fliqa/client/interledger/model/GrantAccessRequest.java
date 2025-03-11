@@ -21,6 +21,8 @@ public class GrantAccessRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public AccessInteract interact;
 
+    private static final String REDIRECT = "redirect";
+
     public GrantAccessRequest(WalletAddress client) {
         this.client = client;
     }
@@ -63,9 +65,20 @@ public class GrantAccessRequest {
         return request;
     }
 
-    public GrantAccessRequest redirectInteract() {
+    /**
+     * @param returnUrl url to return to when interaction is finished or null to omit
+     * @return grant request access
+     */
+    public GrantAccessRequest redirectInteract(URI returnUrl, String nonce) {
         interact = new AccessInteract();
-        interact.start = List.of("redirect");
+        interact.start = List.of(REDIRECT);
+
+        if (returnUrl != null) {
+            interact.finish = new InteractFinish();
+            interact.finish.method = REDIRECT;
+            interact.finish.uri = returnUrl;
+            interact.finish.nonce = nonce;
+        }
         return this;
     }
 }

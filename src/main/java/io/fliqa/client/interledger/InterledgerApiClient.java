@@ -4,6 +4,7 @@ import io.fliqa.client.interledger.exception.InterledgerClientException;
 import io.fliqa.client.interledger.model.*;
 
 import java.math.BigDecimal;
+import java.net.URI;
 
 /**
  * Client that communicates with Interledger backend(s)
@@ -22,7 +23,7 @@ import java.math.BigDecimal;
 public interface InterledgerApiClient {
 
     int INTERNAL_SERVER_ERROR = 500;
-   
+
     /**
      * Step 0
      *
@@ -81,22 +82,25 @@ public interface InterledgerApiClient {
      * Step 5 (SENDER)
      * Finally we create a pending payment that needs to be confirmed by the sender (via redirect-url)
      *
-     * @param sender wallet
-     * @param quote  created quote
+     * @param sender    wallet
+     * @param quote     created quote
+     * @param returnUrl URI to return to when payment was confirmed / denied
+     * @param nonce     nonce to compare with internal state
      * @return payment grant to be confirmed / canceled
      * @throws InterledgerClientException
      */
-    OutgoingPayment continueGrant(PaymentPointer sender, Quote quote) throws InterledgerClientException;
+    OutgoingPayment continueGrant(PaymentPointer sender, Quote quote, URI returnUrl, String nonce) throws InterledgerClientException;
 
     /**
      * Step 6 (CLIENT)
      * Payment was confirmed by the sender we can get access to finalize it
      *
      * @param outgoingPayment to be finalized
+     * @param interactRef     reference to payment sent to returnUrl in query string parameter
      * @return finalized payment
      * @throws InterledgerClientException
      */
-    AccessGrant finalizeGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException;
+    AccessGrant finalizeGrant(OutgoingPayment outgoingPayment, String interactRef) throws InterledgerClientException;
 
     /**
      * Step 7 (CLIENT)
@@ -107,5 +111,13 @@ public interface InterledgerApiClient {
      * @return
      * @throws InterledgerClientException
      */
-    FinalizedPayment finalizePayment(AccessGrant finalized, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException;
+    Payment finalizePayment(AccessGrant finalized, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException;
+
+    /**
+     * Gets payment by id
+     *
+     * @return found payment or 404
+     * @throws InterledgerClientException if payment was not found or we don't have privileges to access payment
+     */
+    IncomingPayment getIncomingPayment(IncomingPayment incomingPayment, AccessGrant grantRequest) throws InterledgerClientException;
 }

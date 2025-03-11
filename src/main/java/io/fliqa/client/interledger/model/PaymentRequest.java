@@ -24,10 +24,25 @@ public class PaymentRequest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public MetaData metadata;
 
-    public static PaymentRequest build(PaymentPointer receiver, BigDecimal amount) {
+    public static PaymentRequest build(PaymentPointer receiver, BigDecimal amount, int expiresInSeconds) {
+
+        if (receiver == null) {
+            throw new NullPointerException("Missing receiver address.");
+        }
+
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero.");
+        }
+
+        if (expiresInSeconds <= 0) {
+            throw new IllegalArgumentException("expiresInSeconds must be greater than 0.");
+        }
+
         PaymentRequest request = new PaymentRequest();
         request.walletAddress = receiver.address;
         request.incomingAmount = InterledgerAmount.build(amount, receiver.assetCode, receiver.assetScale);
+
+        request.expiresAt = Instant.now().plusSeconds(expiresInSeconds);
 
         // TODO: testing remove later
         MetaData meta = new MetaData();

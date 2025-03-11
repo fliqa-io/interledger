@@ -9,6 +9,9 @@ import java.util.Set;
 
 public class IncomingPayment {
 
+    @JsonProperty(value = "id", required = true)
+    public URI id;
+
     @JsonProperty(value = "completed", required = true)
     public boolean completed;
 
@@ -21,9 +24,6 @@ public class IncomingPayment {
     @JsonProperty(value = "expiresAt")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public Instant expiresAt;
-
-    @JsonProperty(value = "id", required = true)
-    public String id;
 
     @JsonProperty(value = "incomingAmount")
     @JsonInclude(JsonInclude.Include.NON_NULL)

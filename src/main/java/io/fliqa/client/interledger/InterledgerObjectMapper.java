@@ -7,28 +7,41 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.InstantSerializer;
 import io.fliqa.client.interledger.exception.InterledgerClientException;
 import io.fliqa.client.interledger.model.ApiError;
+import io.fliqa.client.interledger.serializer.InstantSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.Set;
 
 import static io.fliqa.client.interledger.InterledgerApiClient.INTERNAL_SERVER_ERROR;
 
 /**
  * Wrapper around ObjectMapper to provide default mapping and catch serialization/deserialization exceptions
  * We have two mappers:
- * - mapper           - standard mapper
- * - unwrapRootMapper - deserializes content of root JSON element
+ * - mapper       - standard mapper
+ * - unwrapMapper - deserializes content of root JSON element
  */
 public class InterledgerObjectMapper {
 
+    /**
+     * Some errors are not returned as JSON / mitigate this
+     */
+    private static final Set<String> COMMON_ERRORS = Set.of(
+            "could not get wallet address",
+            "unauthorized",
+            "forbidden");
+
     private final ObjectMapper mapper;
-    private final ObjectMapper unwrapRootMapper;
+    private final ObjectMapper unwrapMapper;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(InterledgerObjectMapper.class);
 
     public InterledgerObjectMapper() {
         mapper = get();
-        unwrapRootMapper = getUnwrapRootMapper();
+        unwrapMapper = getUnwrapMapper();
     }
 
     public static ObjectMapper get() {
@@ -39,7 +52,8 @@ public class InterledgerObjectMapper {
 
         // register serializer/deserializer for java.time.Instant
         SimpleModule module = new SimpleModule();
-        module.addSerializer(Instant.class, InstantSerializer.INSTANCE);
+        module.addSerializer(Instant.class, new InstantSerializer());
+
         module.addDeserializer(Instant.class, InstantDeserializer.INSTANT);
         mapper.registerModule(module);
 
@@ -49,7 +63,7 @@ public class InterledgerObjectMapper {
         return mapper;
     }
 
-    private static ObjectMapper getUnwrapRootMapper() {
+    private static ObjectMapper getUnwrapMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE);  // Enable root value handling
         return mapper;
@@ -74,12 +88,19 @@ public class InterledgerObjectMapper {
         }
     }
 
-    public ApiError readError(String content) throws InterledgerClientException {
+    public ApiError readError(String content, int httpResponseCode) throws InterledgerClientException {
+
+        // This is just a dumb way to mitigate the fact that not all errors are return in JSON format
+        if (COMMON_ERRORS.contains(content.toLowerCase())) {
+            throw new InterledgerClientException(content, httpResponseCode, null, content);
+        }
+
         try {
-            return unwrapRootMapper.readValue(content, ApiError.class);
+            return unwrapMapper.readValue(content, ApiError.class);
         } catch (JsonProcessingException e) {
-            throw new InterledgerClientException(String.format("Failed to deserialize response to: '%s'.", ApiError.class.getName()),
-                    e, INTERNAL_SERVER_ERROR, null, content);
+            LOGGER.warn("Failed to deserialize response: '{}' to: '{}'.", content, ApiError.class.getName());
+
+            throw new InterledgerClientException(content, httpResponseCode, null, content);
         }
     }
 }

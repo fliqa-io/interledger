@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -90,7 +91,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     @Override
     public IncomingPayment createIncomingPayment(PaymentPointer receiver, AccessGrant pendingGrant, BigDecimal amount) throws InterledgerClientException {
 
-        PaymentRequest paymentRequest = PaymentRequest.build(receiver, amount);
+        PaymentRequest paymentRequest = PaymentRequest.build(receiver, amount, options.transactionExpirationInSeconds);
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(paymentRequest)
@@ -120,7 +121,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     public Quote createQuote(String quoteToken, PaymentPointer sender, IncomingPayment incomingPayment) throws InterledgerClientException {
 
         QuoteRequest quoteRequest = QuoteRequest.build(sender.address,
-                incomingPayment.id,
+                incomingPayment.id.toString(),
                 "ilp"); // not sure why "ilp" is needed / hardcoded for now
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
@@ -133,13 +134,13 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     }
 
     @Override
-    public OutgoingPayment continueGrant(PaymentPointer sender, Quote quote) throws InterledgerClientException {
+    public OutgoingPayment continueGrant(PaymentPointer sender, Quote quote, URI returnUrl, String nonce) throws InterledgerClientException {
 
         GrantAccessRequest accessRequest = GrantAccessRequest.outgoing(clientWallet,
                         AccessItemType.outgoingPayment,
                         Set.of(AccessAction.read, AccessAction.create),
                         sender.address, quote.debitAmount)
-                .redirectInteract();
+                .redirectInteract(returnUrl, nonce);
 
         // log.info(String.format("POST: %s", mapper.writeValueAsString(accessRequest)));
 
@@ -152,18 +153,21 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     }
 
     @Override
-    public AccessGrant finalizeGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException {
+    public AccessGrant finalizeGrant(OutgoingPayment outgoingPayment, String interactRef) throws InterledgerClientException {
+
+        InteractRef ref = InteractRef.build(interactRef);
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
-                .POST()
+                .POST(ref)
                 .target(outgoingPayment.paymentContinue.uri)
                 .accessToken(outgoingPayment.paymentContinue.access.token)
                 .getRequest(options);
+
         return send(request, AccessGrant.class);
     }
 
     @Override
-    public FinalizedPayment finalizePayment(AccessGrant finalizedGrant, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException {
+    public Payment finalizePayment(AccessGrant finalizedGrant, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException {
 
         OutgoingPaymentRequest outgoingPayment = new OutgoingPaymentRequest();
         outgoingPayment.quoteId = quote.id;
@@ -175,9 +179,33 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                 .accessToken(finalizedGrant.access.token)
                 .getRequest(options);
 
-        return send(request, FinalizedPayment.class);
+        return send(request, Payment.class);
     }
 
+    @Override
+    public IncomingPayment getIncomingPayment(IncomingPayment payment, AccessGrant grant) throws InterledgerClientException {
+
+        HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
+                .GET()
+                .target(payment.id)
+                .accessToken(grant.access.token)
+                .getRequest(options);
+
+        return send(request, IncomingPayment.class);
+    }
+
+    /* @Override
+     public Payment getOutgotingPayment(String token, PaymentPointer sender, String paymentId) throws InterledgerClientException {
+
+         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
+                 .GET()
+                 .target(sender.resourceServer + "/outgoing-payments" + paymentId)
+                 .accessToken(token)
+                 .getRequest(options);
+
+         return send(request, Payment.class);
+     }
+ */
     public <T> T send(HttpRequest request, Class<T> responseType) throws InterledgerClientException {
         try {
             httpLogger.logRequest(request);
@@ -186,7 +214,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 // deserialize error and throw exception
-                ApiError error = mapper.readValue(response.body(), ApiError.class);
+                ApiError error = mapper.readError(response.body(), response.statusCode());
                 throw getApiException(error, response);
             }
 

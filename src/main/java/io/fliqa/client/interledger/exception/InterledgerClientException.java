@@ -94,6 +94,6 @@ public class InterledgerClientException extends Exception {
         String code = error.code == null || error.code.isBlank() ? ">no error code<" : error.code;
         String description = error.description == null || error.description.isBlank() ? ">no error description<" : error.description;
 
-        return "[" + statusCode + "](" + code + ") " + description;
+        return "[" + statusCode + "] (" + code + ") " + description;
     }
 }
