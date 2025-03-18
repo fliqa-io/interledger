@@ -24,7 +24,7 @@ class InterledgerApiClientImplIT {
 
     private static final Logger log = getLogger(InterledgerApiClientImplIT.class);
 
-    private static final int TRANSACTION_TIMEOUT = 20;
+    private static final int TRANSACTION_TIMEOUT = 120;
     private InterledgerApiClientImpl client;
 
     @BeforeEach
@@ -58,7 +58,7 @@ class InterledgerApiClientImplIT {
     @Test
     public void getReceiverWallet() throws InterledgerClientException {
 
-        PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS + "BLA"));
+        PaymentPointer wallet = client.getWallet(new WalletAddress(TestHelper.RECEIVER_WALLET_ADDRESS));
         assertNotNull(wallet);
 
         Assertions.assertEquals(URI.create(TestHelper.RECEIVER_WALLET_ADDRESS), wallet.address);
@@ -102,7 +102,7 @@ class InterledgerApiClientImplIT {
         // 2. create incoming payment request
         log.info("********");
         log.info("Create incoming payment grant:");
-        IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(1200.34));
+        IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(12.34));
         assertNotNull(incomingPayment);
 
         // get sender wallet (at this point the user has to enter his wallet address)

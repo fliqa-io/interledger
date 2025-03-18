@@ -229,7 +229,8 @@ public class SignatureRequestBuilder {
             throw new IllegalArgumentException("Target URI must not be null!");
         }
 
-        String out = value.toString();    // TODO: fix target so it conforms to expectations
+        // We must fix target so it conforms to expectations
+        String out = value.toString();
         if (!out.endsWith("/") && value.getQuery() == null) {
             return out + "/";
         }
