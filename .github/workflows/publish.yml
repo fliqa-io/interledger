@@ -27,17 +27,20 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Remove SNAPSHOT from version
+      - name: Set release version
         id: get_version
         run: |
-          # Extract version from build.gradle.kts
+          echo "Get version from build.gradle.kts"
           PACKAGE_VERSION=$(grep -o 'version = "[^"]*"' build.gradle.kts | cut -d'"' -f2)
-          
-          if: ${{ github.event.inputs.tag == 'release'  }}
-            # Remove -SNAPSHOT suffix
+
+          if [ "${{ github.event.inputs.tag }}" == "release" ]; then
+            echo "Removing SNAPSHOT for release version"
             RELEASE_VERSION="${PACKAGE_VERSION/-SNAPSHOT/}"
-            echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
+          else
+            RELEASE_VERSION="${PACKAGE_VERSION}"
           fi
+          
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
           echo "Version for release: $RELEASE_VERSION"
 
       - name: Publish to GitHub Packages
