@@ -3,7 +3,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "io.fliqa.client"
+group = "io.fliqa"
 version = "1.0.0-SNAPSHOT"
 
 // Take version from parameter or set default
