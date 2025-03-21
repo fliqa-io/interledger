@@ -45,7 +45,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         run: ./gradlew publish -Prelease.version=${{ env.RELEASE_VERSION }}
 
       - name: Create Git Tag

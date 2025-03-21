@@ -102,11 +102,10 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url =
-                uri("https://maven.pkg.github.com/${project.findProperty("github.repository") ?: System.getenv("GITHUB_REPOSITORY") ?: "fliqa-io/interledger"}")
+            url = uri("https://maven.pkg.github.com/fliqa-io/packages")
             credentials {
                 username = project.findProperty("github.username") as String? ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("github.token") as String? ?: System.getenv("GITHUB_TOKEN")
+                password = project.findProperty("github.token") as String? ?: System.getenv("PACKAGES_TOKEN")
             }
         }
     }
