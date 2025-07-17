@@ -15,6 +15,7 @@
  */
 package io.fliqa.client.interledger.logging;
 
+import io.fliqa.client.interledger.utils.Assert;
 import org.slf4j.Logger;
 
 import java.net.http.HttpHeaders;
@@ -98,9 +99,10 @@ public class HttpLogger {
      * Creates a new HTTP logger with the specified SLF4J logger.
      *
      * @param logger SLF4J logger instance to use for output
-     * @throws NullPointerException if logger is null
+     * @throws IllegalArgumentException if logger is null
      */
     public HttpLogger(Logger logger) {
+        Assert.notNull(logger, "Logger must not be null");
         this.LOGGER = logger;
     }
 
@@ -121,6 +123,7 @@ public class HttpLogger {
      */
     public void logRequest(HttpRequest req) {
 
+        Assert.notNull(req, "HTTP request must not be null");
         StringBuilder logMessage = new StringBuilder();
         logMessage.append("HTTP Request:  ").append(req.method()).append(" ").append(req.uri());
 
@@ -180,6 +183,8 @@ public class HttpLogger {
      * @param res HTTP response to log
      */
     public void logResponse(HttpResponse<String> res) {
+        Assert.notNull(res, "HTTP response must not be null");
+
         StringBuilder logMessage = new StringBuilder();
         logMessage.append("HTTP Response: ").append(res.statusCode()).append(" ").append(res.uri());
 

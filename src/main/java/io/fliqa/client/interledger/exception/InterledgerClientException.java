@@ -22,19 +22,19 @@ import java.net.http.HttpResponse;
 
 /**
  * Exception thrown when errors occur during Interledger API operations.
- * 
+ *
  * <p>This exception encapsulates both network-level errors (timeouts, connection failures)
  * and application-level errors (invalid requests, authentication failures, server errors).
  * It provides access to HTTP status codes, response headers, and response bodies when
  * available to help with debugging and error handling.
- * 
+ *
  * <h3>Error Categories</h3>
  * <ul>
  *   <li><strong>Network Errors</strong> - Connection timeouts, DNS failures, network unreachable</li>
  *   <li><strong>Client Errors (4xx)</strong> - Invalid requests, authentication failures, not found</li>
  *   <li><strong>Server Errors (5xx)</strong> - Interledger server internal errors, service unavailable</li>
  * </ul>
- * 
+ *
  * <h3>Usage</h3>
  * <p>When catching this exception, applications can inspect the HTTP status code to determine
  * the appropriate response:
@@ -49,11 +49,11 @@ import java.net.http.HttpResponse;
  *     }
  * }
  * }</pre>
- * 
+ *
  * @author Fliqa
  * @version 1.0
- * @since 1.0
  * @see ApiError
+ * @since 1.0
  */
 public class InterledgerClientException extends Exception {
 
@@ -65,7 +65,7 @@ public class InterledgerClientException extends Exception {
 
     /**
      * Creates a new exception wrapping an underlying cause.
-     * 
+     *
      * @param throwable the underlying cause of this exception
      */
     public InterledgerClientException(Throwable throwable) {
@@ -74,7 +74,7 @@ public class InterledgerClientException extends Exception {
 
     /**
      * Creates a new exception with a descriptive message.
-     * 
+     *
      * @param message the error message describing what went wrong
      */
     public InterledgerClientException(String message) {
@@ -83,12 +83,12 @@ public class InterledgerClientException extends Exception {
 
     /**
      * Creates a new exception with full HTTP response details and an underlying cause.
-     * 
-     * @param message the error message
-     * @param throwable the underlying cause
-     * @param code the HTTP status code
+     *
+     * @param message         the error message
+     * @param throwable       the underlying cause
+     * @param code            the HTTP status code
      * @param responseHeaders the HTTP response headers
-     * @param responseBody the HTTP response body
+     * @param responseBody    the HTTP response body
      */
     public InterledgerClientException(String message, Throwable throwable, int code, HttpHeaders responseHeaders, String responseBody) {
         super(message, throwable);
@@ -99,11 +99,11 @@ public class InterledgerClientException extends Exception {
 
     /**
      * Creates a new exception with HTTP response details.
-     * 
-     * @param message the error message
-     * @param code the HTTP status code
+     *
+     * @param message         the error message
+     * @param code            the HTTP status code
      * @param responseHeaders the HTTP response headers
-     * @param responseBody the HTTP response body
+     * @param responseBody    the HTTP response body
      */
     public InterledgerClientException(String message, int code, HttpHeaders responseHeaders, String responseBody) {
         this(message, (Throwable) null, code, responseHeaders, responseBody);
@@ -157,11 +157,11 @@ public class InterledgerClientException extends Exception {
 
     /**
      * Creates an exception from an Interledger API error response.
-     * 
+     *
      * <p>This factory method constructs a properly formatted exception from an API error
      * response, including the HTTP status code, headers, and structured error information.
-     * 
-     * @param error the parsed API error from the response body
+     *
+     * @param error    the parsed API error from the response body
      * @param response the HTTP response containing error details
      * @return a new exception with formatted error message and response details
      */
@@ -177,8 +177,8 @@ public class InterledgerClientException extends Exception {
 
     /**
      * Formats an exception message from API error details.
-     * 
-     * @param error the API error containing code and description
+     *
+     * @param error      the API error containing code and description
      * @param statusCode the HTTP status code
      * @return formatted error message in the format "[statusCode] (errorCode) description"
      */
