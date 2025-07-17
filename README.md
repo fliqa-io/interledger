@@ -20,6 +20,11 @@ We have three "players":
 
 ### Interledger lingo explained
 
+The Interledger Protocol uses terminology that differs from traditional banking and financial applications.
+This is because Interledger was designed for decentralized, internet-native payments rather than traditional banking
+infrastructure.
+Understanding these terms is crucial for developers working with the protocol:
+
 - **asset type** = currency, currently supported:
     - EUR (Euro),
     - GBP (Pound Sterling),
@@ -39,21 +44,22 @@ Using Fliqa's **private key** and **key id** and the _receiver_ **payment pointe
 - get a grand request
 - create an incoming payment to the _recevier_ wallet (aka payment pointer)
 
-> **NOTE:** The receiver payment pointer is already entered in the Tenant's Point of sale (same as IBAN).
+> **NOTE:** The receiver payment pointer is already known to us, we know where the payment will be deposited.
 
 ### 2. Fliqa creates a quote request
 
 A quote is the cost of the transaction (aka fee) from the sender to the receiver payment pointer (wallet).  
 In order to do this we need the sender payment pointer.
 
-> **NOTE:** This is the point where the sender enters his payment pointer / same as entering IBAN
+> **NOTE:** This is the point where the sender enters his payment pointer
 
-The quote is made for the incoming payment on the _sender_ **payment pointer**
+In our case the quote is made for the incoming payment on the _sender_ **payment pointer**. Sender covers the
+transaction fees.
 
 ### 3. Redirect user to confirm the payment
 
-Once we have the quote we can create a redirect link for the sender to confirm the payment.
-  
+Once we have the quote, we can create a redirect link for the sender to confirm the payment.
+
 > **NOTE:** User is redirected to his wallet where he confirms / denies the payment
 
 ### 4. Finalization of payment

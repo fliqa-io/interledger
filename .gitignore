@@ -42,3 +42,7 @@ bin/
 .DS_Store
 /.idea/
 /gradle.properties
+
+### Test Configuration ###
+# Exclude test configuration files containing sensitive information
+src/integrationTest/resources/test-config.properties
