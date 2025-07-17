@@ -105,7 +105,7 @@ public class InterledgerObjectMapper {
 
     public ApiError readError(String content, int httpResponseCode) throws InterledgerClientException {
 
-        // This is just a dumb way to mitigate the fact that not all errors are return in JSON format
+        // This is just a dumb way to mitigate the fact that not all errors are returned in JSON format
         if (COMMON_ERRORS.contains(content.toLowerCase())) {
             throw new InterledgerClientException(content, httpResponseCode, null, content);
         }

@@ -35,7 +35,8 @@ public class Limits {
     public InterledgerAmount debitAmount;
 
     /**
-     * ISO8601 repeating interval (TODO: to be properly implemented if repeating transactions are used)
+     * ISO8601 repeating interval
+     * (TODO: not used at the moment, to be properly implemented if repeating transactions are used)
      */
     @JsonProperty("interval")
     @JsonInclude(JsonInclude.Include.NON_NULL)

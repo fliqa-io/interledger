@@ -15,21 +15,57 @@
  */
 package io.fliqa.client.interledger;
 
+/**
+ * Configuration options for the Interledger API client.
+ *
+ * <p>This class encapsulates HTTP client configuration including connection timeouts,
+ * request timeouts, and transaction expiration settings. These options control the
+ * behavior of the underlying HTTP client and payment processing timeouts.
+ *
+ * <h3>Timeout Settings</h3>
+ * <ul>
+ *   <li><strong>Connect Timeout</strong> - Maximum time to establish HTTP connections</li>
+ *   <li><strong>Request Timeout</strong> - Maximum time for individual HTTP requests</li>
+ *   <li><strong>Transaction Expiration</strong> - How long pending payments remain valid</li>
+ * </ul>
+ *
+ * <h3>Default Configuration</h3>
+ * <p>The default configuration provides reasonable timeouts for most use cases:
+ * <ul>
+ *   <li>10 second connection timeout</li>
+ *   <li>10 seconds request timeout</li>
+ *   <li>10 minutes transaction expiration</li>
+ * </ul>
+ *
+ * @author Fliqa
+ * @version 1.0
+ * @see InterledgerApiClientImpl
+ * @since 1.0
+ */
 public class InterledgerClientOptions {
 
-    // HTTP connection
+    /**
+     * Timeout for establishing HTTP connections, in seconds.
+     */
     public final int connectTimeOutInSeconds;
+
+    /**
+     * General timeout for HTTP operations, in seconds.
+     */
     public final int timeOutInSeconds;
 
     /**
-     * Expiration time in seconds for pending transaction (i.e. 5minutes ... )
+     * Expiration time in seconds for pending transactions.
+     * After this time, pending payments will be considered expired.
      */
     public final int transactionExpirationInSeconds;
 
     /**
-     * @param connectTimeoutInSeconds        Timeout for establishing connections, in seconds.
-     * @param timeoutInSeconds               General timeout for operations, in seconds.
-     * @param transactionExpirationInSeconds Transaction expiration time in seconds
+     * Creates a new configuration with custom timeout settings.
+     *
+     * @param connectTimeoutInSeconds        timeout for establishing HTTP connections, in seconds
+     * @param timeoutInSeconds               general timeout for HTTP operations, in seconds
+     * @param transactionExpirationInSeconds expiration time for pending transactions, in seconds
      */
     public InterledgerClientOptions(int connectTimeoutInSeconds,
                                     int timeoutInSeconds,
@@ -39,6 +75,10 @@ public class InterledgerClientOptions {
         this.transactionExpirationInSeconds = transactionExpirationInSeconds;
     }
 
+    /**
+     * Default configuration with reasonable timeout values.
+     * Uses 10 second connection and request timeouts, and 10 minute transaction expiration.
+     */
     public static final InterledgerClientOptions DEFAULT =
             new InterledgerClientOptions(10, 10, 10 * 60);
 }

@@ -38,6 +38,46 @@ import static io.fliqa.client.interledger.signature.SignatureRequestBuilder.ACCE
 import static io.fliqa.client.interledger.signature.SignatureRequestBuilder.APPLICATION_JSON;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
+/**
+ * Default implementation of the {@link InterledgerApiClient} interface.
+ *
+ * <p>This implementation provides a complete HTTP-based client for the Interledger
+ * Open Payments protocol, with cryptographic request signing using Ed25519 keys.
+ * The client is designed for Fliqa's payment facilitation use cases where Fliqa
+ * acts as an intermediary between payment senders and receivers.
+ *
+ * <h3>Features</h3>
+ * <ul>
+ *   <li>Cryptographic request signing using Ed25519 private keys</li>
+ *   <li>HTTP/2 client with configurable timeouts and connection limits</li>
+ *   <li>Comprehensive error handling with structured exception types</li>
+ *   <li>Request/response logging for debugging and auditing</li>
+ *   <li>Input validation for all public methods</li>
+ * </ul>
+ *
+ * <h3>Thread Safety</h3>
+ * <p>This implementation is thread-safe and can be used concurrently from multiple threads.
+ * The underlying HTTP client and cryptographic operations are thread-safe.
+ *
+ * <h3>Security</h3>
+ * <p>All requests to Interledger servers are signed using Ed25519 signatures following
+ * the HTTP Message Signatures specification. The client validates that all required
+ * parameters are provided and non-null before making requests.
+ *
+ * <h3>Error Handling</h3>
+ * <p>The client distinguishes between different types of HTTP errors:
+ * <ul>
+ *   <li>4xx errors - Client errors (invalid requests, authentication failures)</li>
+ *   <li>5xx errors - Server errors (Interledger server issues)</li>
+ *   <li>Network errors - Connection timeouts, DNS failures, etc.</li>
+ * </ul>
+ *
+ * @author Fliqa
+ * @version 1.0
+ * @see InterledgerApiClient
+ * @see InterledgerClientOptions
+ * @since 1.0
+ */
 public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InterledgerApiClientImpl.class);
@@ -52,6 +92,19 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     private final InterledgerObjectMapper mapper = new InterledgerObjectMapper();
     private final HttpLogger httpLogger;
 
+    /**
+     * Creates a new Interledger API client with custom configuration options.
+     *
+     * <p>This constructor allows full customization of the HTTP client behavior including
+     * connection timeouts, request timeouts, and maximum concurrent connections.
+     *
+     * @param clientWallet the wallet address of the payment facilitator (Fliqa)
+     * @param privateKey   Ed25519 private key for signing requests
+     * @param keyId        identifier for the private key, used in signature headers
+     * @param options      HTTP client configuration including timeouts and connection limits
+     * @throws IllegalArgumentException if any parameter is null or keyId is empty
+     * @see InterledgerClientOptions
+     */
     public InterledgerApiClientImpl(WalletAddress clientWallet,
                                     PrivateKey privateKey,
                                     String keyId,
@@ -71,6 +124,18 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         httpLogger = new HttpLogger(LOGGER);
     }
 
+    /**
+     * Creates a new Interledger API client with default configuration options.
+     *
+     * <p>This convenience constructor uses default HTTP client settings, including
+     * standard timeouts and connection limits suitable for most use cases.
+     *
+     * @param clientWallet the wallet address of the payment facilitator (Fliqa)
+     * @param privateKey   Ed25519 private key for signing requests
+     * @param keyId        identifier for the private key, used in signature headers
+     * @throws IllegalArgumentException if any parameter is null or keyId is empty
+     * @see #InterledgerApiClientImpl(WalletAddress, PrivateKey, String, InterledgerClientOptions)
+     */
     public InterledgerApiClientImpl(WalletAddress clientWallet,
                                     PrivateKey privateKey,
                                     String keyId) {

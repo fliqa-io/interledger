@@ -22,6 +22,22 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Set;
 
+/**
+ * Represents an incoming payment request on a receiver's wallet.
+ * 
+ * <p>An incoming payment is created to establish a payment destination with a specific
+ * amount that senders can pay to. It serves as the target for outgoing payments and
+ * tracks the completion status and received amount.
+ * 
+ * <p>This is created in step 2 of the payment flow on the receiver's wallet and
+ * referenced by senders when creating quotes and executing payments.
+ * 
+ * @author Fliqa
+ * @version 1.0
+ * @since 1.0
+ * @see PaymentPointer
+ * @see InterledgerAmount
+ */
 public class IncomingPayment {
 
     @JsonProperty(value = "id", required = true)

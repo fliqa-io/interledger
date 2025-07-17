@@ -65,4 +65,23 @@ public class Payment {
     @JsonProperty("metadata")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public MetaData metadata;
+
+    @Override
+    public String toString() {
+        return "Payment{" +
+                "id=" + id +
+                ", walletAddress=" + walletAddress +
+                ", quoteId=" + quoteId +
+                ", failed=" + failed +
+                ", receiver=" + receiver +
+                ", receivedAmount=" + receivedAmount +
+                ", debitAmount=" + debitAmount +
+                ", sentAmount=" + sentAmount +
+                ", grantSpentDebitAmount=" + grantSpentDebitAmount +
+                ", grantSpentReceiveAmount=" + grantSpentReceiveAmount +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", metadata=" + metadata +
+                '}';
+    }
 }

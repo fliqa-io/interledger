@@ -181,7 +181,8 @@ class InterledgerApiClientImplIT {
         // This implements the interactive authorization flow required by Open Payments.
         log.info("********");
         log.info("STEP 5: Create user interaction redirect");
-        OutgoingPayment continueInteract = client.continueGrant(senderWallet, quote, URI.create("https://demo.fliqa.io/interledger?paymentId=1234"),
+        OutgoingPayment continueInteract = client.continueGrant(senderWallet, quote,
+                URI.create("https://demo.fliqa.io/interledger/payment.html?paymentId=1234"),
                 "test");
 
         // The redirect URL will contain query parameters when the user returns:
