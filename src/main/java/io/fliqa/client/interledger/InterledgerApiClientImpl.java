@@ -4,6 +4,7 @@ import io.fliqa.client.interledger.exception.InterledgerClientException;
 import io.fliqa.client.interledger.logging.HttpLogger;
 import io.fliqa.client.interledger.model.*;
 import io.fliqa.client.interledger.signature.SignatureRequestBuilder;
+import io.fliqa.client.interledger.utils.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InterledgerApiClientImpl.class);
+    private static final String ILP_METHOD = "ilp";
 
     private final WalletAddress clientWallet;
     private final PrivateKey privateKey;
@@ -40,6 +42,11 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                                     String keyId,
                                     InterledgerClientOptions options) {
 
+        Assert.notNull(clientWallet, "clientWallet cannot be null");
+        Assert.notNull(privateKey, "privateKey cannot be null");
+        Assert.notNullOrEmpty(keyId, "keyId cannot be null or empty");
+        Assert.notNull(options, "client options cannot be null");
+        
         this.clientWallet = clientWallet;
         this.privateKey = privateKey;
         this.keyId = keyId;
@@ -122,7 +129,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
         QuoteRequest quoteRequest = QuoteRequest.build(sender.address,
                 incomingPayment.id.toString(),
-                "ilp"); // not sure why "ilp" is needed / hardcoded for now
+                ILP_METHOD);
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(quoteRequest)
@@ -141,8 +148,6 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                         Set.of(AccessAction.read, AccessAction.create),
                         sender.address, quote.debitAmount)
                 .redirectInteract(returnUrl, nonce);
-
-        // log.info(String.format("POST: %s", mapper.writeValueAsString(accessRequest)));
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(accessRequest)
@@ -194,18 +199,6 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         return send(request, IncomingPayment.class);
     }
 
-    /* @Override
-     public Payment getOutgotingPayment(String token, PaymentPointer sender, String paymentId) throws InterledgerClientException {
-
-         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
-                 .GET()
-                 .target(sender.resourceServer + "/outgoing-payments" + paymentId)
-                 .accessToken(token)
-                 .getRequest(options);
-
-         return send(request, Payment.class);
-     }
- */
     public <T> T send(HttpRequest request, Class<T> responseType) throws InterledgerClientException {
         try {
             httpLogger.logRequest(request);

@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 
 /**
  * We need a special logger in order to capture request body
+ * NOTE: same class is also used in Billing / LagoClient API module
  */
 public class HttpLogger {
 
@@ -19,10 +20,10 @@ public class HttpLogger {
     private static final String LOG_BODY = "body: ";
     private static final String LOG_NO_BODY = "<no body>";
 
-    private final Logger logger;
+    private final Logger LOGGER;
 
     public HttpLogger(Logger logger) {
-        this.logger = logger;
+        this.LOGGER = logger;
     }
 
     public void logRequest(HttpRequest req) {
@@ -30,7 +31,7 @@ public class HttpLogger {
         StringBuilder logMessage = new StringBuilder();
         logMessage.append("HTTP Request:  ").append(req.method()).append(" ").append(req.uri());
 
-        if (logger.isTraceEnabled()) {  // log request details only if trace level is enabled
+        if (LOGGER.isTraceEnabled()) {  // log request details only if trace level is enabled
             logHeaders(req.headers(), logMessage);
             // define a consumer for how you want to log
             if (req.bodyPublisher().isPresent()) {
@@ -39,16 +40,16 @@ public class HttpLogger {
                         logMessage.append(System.lineSeparator()).append(LOG_SPACE).append(LOG_BODY).append(body);
                     }
 
-                    logger.trace(logMessage.toString());
+                    LOGGER.trace(logMessage.toString());
                 };
 
                 req.bodyPublisher().get().subscribe(new HttpBodySubscriber(bodyConsumer));
             } else {
                 logMessage.append(System.lineSeparator()).append(LOG_SPACE).append(LOG_NO_BODY);
-                logger.trace(logMessage.toString());
+                LOGGER.trace(logMessage.toString());
             }
         } else {
-            logger.debug(logMessage.toString());
+            LOGGER.debug(logMessage.toString());
         }
     }
 
@@ -65,7 +66,7 @@ public class HttpLogger {
         StringBuilder logMessage = new StringBuilder();
         logMessage.append("HTTP Response: ").append(res.statusCode()).append(" ").append(res.uri());
 
-        if (logger.isTraceEnabled()) {
+        if (LOGGER.isTraceEnabled()) {
             logHeaders(res.headers(), logMessage);
 
             String body = res.body() != null ? res.body() : LOG_NO_BODY;
@@ -74,9 +75,9 @@ public class HttpLogger {
                     .append(LOG_BODY)
                     .append(body);
 
-            logger.trace(logMessage.toString());
+            LOGGER.trace(logMessage.toString());
         } else {
-            logger.debug(logMessage.toString());
+            LOGGER.debug(logMessage.toString());
         }
     }
 
