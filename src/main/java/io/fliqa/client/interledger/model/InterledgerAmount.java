@@ -76,4 +76,13 @@ public class InterledgerAmount {
     public static String toInterledgerAmount(BigDecimal amount) {
         return toInterledgerAmount(amount, DEFAULT_AMOUNT_SCALE);
     }
+
+    @Override
+    public String toString() {
+        return "InterledgerAmount{" +
+                "assetCode='" + assetCode + '\'' +
+                ", assetScale=" + assetScale +
+                ", amount='" + amount + '\'' +
+                '}';
+    }
 }

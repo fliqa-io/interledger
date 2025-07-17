@@ -23,4 +23,11 @@ public class WalletAddress {
         }
         this.paymentPointer = address;
     }
+
+    @Override
+    public String toString() {
+        return "WalletAddress{" +
+                "paymentPointer=" + paymentPointer +
+                '}';
+    }
 }

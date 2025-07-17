@@ -23,4 +23,16 @@ public class PaymentPointer {
 
     @JsonProperty(value = "resourceServer", required = true)
     public URI resourceServer;
+
+    @Override
+    public String toString() {
+        return "PaymentPointer{" +
+                "address=" + address +
+                ", publicName='" + publicName + '\'' +
+                ", assetCode='" + assetCode + '\'' +
+                ", assetScale=" + assetScale +
+                ", authServer=" + authServer +
+                ", resourceServer=" + resourceServer +
+                '}';
+    }
 }

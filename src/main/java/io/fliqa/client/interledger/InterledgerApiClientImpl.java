@@ -26,7 +26,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InterledgerApiClientImpl.class);
-    private static final String ILP_METHOD = "ilp";
+    private static final String ILP_METHOD = "ilp"; // NOTE: this is currently hardcoded (might be an argument / not sure)
 
     private final WalletAddress clientWallet;
     private final PrivateKey privateKey;
@@ -42,11 +42,11 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                                     String keyId,
                                     InterledgerClientOptions options) {
 
-        Assert.notNull(clientWallet, "clientWallet cannot be null");
-        Assert.notNull(privateKey, "privateKey cannot be null");
-        Assert.notNullOrEmpty(keyId, "keyId cannot be null or empty");
-        Assert.notNull(options, "client options cannot be null");
-        
+        Assert.notNull(clientWallet, "WalletAddress cannot be null");
+        Assert.notNull(privateKey, "PrivateKey cannot be null");
+        Assert.notNullOrEmpty(keyId, "KeyId cannot be null or empty");
+        Assert.notNull(options, "InterledgerClientOptions cannot be null");
+
         this.clientWallet = clientWallet;
         this.privateKey = privateKey;
         this.keyId = keyId;
@@ -70,6 +70,8 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public PaymentPointer getWallet(WalletAddress address) throws InterledgerClientException {
+        Assert.notNull(address, "WalletAddress cannot be null");
+        LOGGER.debug("getWallet: {}", address);
 
         var request = HttpRequest.newBuilder(address.paymentPointer)
                 .GET()
@@ -82,6 +84,8 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public AccessGrant createPendingGrant(PaymentPointer receiver) throws InterledgerClientException {
+        Assert.notNull(receiver, "PaymentPointer receiver cannot be null");
+        LOGGER.debug("createPendingGrant: {}", receiver);
 
         GrantAccessRequest accessRequest = GrantAccessRequest.build(clientWallet,
                 AccessItemType.incomingPayment,
@@ -97,6 +101,11 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public IncomingPayment createIncomingPayment(PaymentPointer receiver, AccessGrant pendingGrant, BigDecimal amount) throws InterledgerClientException {
+        Assert.notNull(receiver, "PaymentPointer receiver cannot be null");
+        Assert.notNull(pendingGrant, "AccessGrant pendingGrant cannot be null");
+        Assert.notNull(amount, "BigDecimal amount cannot be null");
+
+        LOGGER.debug("createIncomingPayment: {} for: {}", receiver, amount);
 
         PaymentRequest paymentRequest = PaymentRequest.build(receiver, amount, options.transactionExpirationInSeconds);
 
@@ -111,6 +120,8 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public AccessGrant createQuoteRequest(PaymentPointer sender) throws InterledgerClientException {
+        Assert.notNull(sender, "PaymentPointer sender cannot be null");
+        LOGGER.debug("createQuoteRequest: {}", sender);
 
         GrantAccessRequest accessRequest = GrantAccessRequest.build(clientWallet,
                 AccessItemType.quote,
@@ -126,6 +137,10 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public Quote createQuote(String quoteToken, PaymentPointer sender, IncomingPayment incomingPayment) throws InterledgerClientException {
+        Assert.notNullOrEmpty(quoteToken, "Quote token cannot be null or empty");
+        Assert.notNull(sender, "PaymentPointer sender cannot be null");
+        Assert.notNull(incomingPayment, "IncomingPayment cannot be null");
+        LOGGER.debug("createQuote: {} for: {}", incomingPayment, sender);
 
         QuoteRequest quoteRequest = QuoteRequest.build(sender.address,
                 incomingPayment.id.toString(),
@@ -142,6 +157,11 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public OutgoingPayment continueGrant(PaymentPointer sender, Quote quote, URI returnUrl, String nonce) throws InterledgerClientException {
+        Assert.notNull(sender, "PaymentPointer sender cannot be null");
+        Assert.notNull(quote, "Quote cannot be null");
+        Assert.notNull(returnUrl, "Return URL cannot be null");
+        Assert.notNullOrEmpty(nonce, "Nonce cannot be null or empty");
+        LOGGER.debug("continueGrant: {} for: {}", quote, sender);
 
         GrantAccessRequest accessRequest = GrantAccessRequest.outgoing(clientWallet,
                         AccessItemType.outgoingPayment,
@@ -159,6 +179,9 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public AccessGrant finalizeGrant(OutgoingPayment outgoingPayment, String interactRef) throws InterledgerClientException {
+        Assert.notNull(outgoingPayment, "OutgoingPayment cannot be null");
+        Assert.notNullOrEmpty(interactRef, "Interact reference cannot be null or empty");
+        LOGGER.debug("finalizeGrant: {} for: {}", outgoingPayment, interactRef);
 
         InteractRef ref = InteractRef.build(interactRef);
 
@@ -173,6 +196,10 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public Payment finalizePayment(AccessGrant finalizedGrant, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException {
+        Assert.notNull(finalizedGrant, "AccessGrant finalizedGrant cannot be null");
+        Assert.notNull(senderWallet, "PaymentPointer senderWallet cannot be null");
+        Assert.notNull(quote, "Quote cannot be null");
+        LOGGER.debug("finalizePayment: {} for: {}, with: {}", finalizedGrant, senderWallet, quote);
 
         OutgoingPaymentRequest outgoingPayment = new OutgoingPaymentRequest();
         outgoingPayment.quoteId = quote.id;
@@ -189,6 +216,9 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     @Override
     public IncomingPayment getIncomingPayment(IncomingPayment payment, AccessGrant grant) throws InterledgerClientException {
+        Assert.notNull(payment, "IncomingPayment cannot be null");
+        Assert.notNull(grant, "AccessGrant cannot be null");
+        LOGGER.debug("getIncomingPayment: {}", payment);
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .GET()
@@ -201,29 +231,44 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
     /**
      * Extracts access token from AccessGrant
+     *
      * @param grant the access grant containing the token
      * @return the access token string
+     * @throws IllegalArgumentException if grant, grant.access, or grant.access.token is null
      */
     private String extractAccessToken(AccessGrant grant) {
+        Assert.notNull(grant, "AccessGrant cannot be null");
+        Assert.notNull(grant.access, "AccessGrant.access cannot be null");
+        Assert.notNull(grant.access.token, "AccessGrant.access.token cannot be null");
         return grant.access.token;
     }
 
     /**
      * Extracts access token from OutgoingPayment's continue access
+     *
      * @param outgoingPayment the outgoing payment containing continue access
      * @return the access token string
+     * @throws IllegalArgumentException if outgoingPayment, paymentContinue, access, or token is null
      */
     private String extractContinueAccessToken(OutgoingPayment outgoingPayment) {
+        Assert.notNull(outgoingPayment, "OutgoingPayment cannot be null");
+        Assert.notNull(outgoingPayment.paymentContinue, "OutgoingPayment.paymentContinue cannot be null");
+        Assert.notNull(outgoingPayment.paymentContinue.access, "OutgoingPayment.paymentContinue.access cannot be null");
+        Assert.notNull(outgoingPayment.paymentContinue.access.token, "OutgoingPayment.paymentContinue.access.token cannot be null");
         return outgoingPayment.paymentContinue.access.token;
     }
 
     /**
      * Safely builds a resource URL by appending a path to a base URI
+     *
      * @param baseUri the base URI
-     * @param path the path to append (should start with / or will be prepended)
+     * @param path    the path to append (should start with / or will be prepended)
      * @return the constructed URI
+     * @throws IllegalArgumentException if baseUri or path is null
      */
     private URI buildResourceUrl(URI baseUri, String path) {
+        Assert.notNull(baseUri, "Base URI cannot be null");
+        Assert.notNull(path, "Path cannot be null");
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
         return baseUri.resolve(normalizedPath);
     }
@@ -235,9 +280,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
             httpLogger.logResponse(response);
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                // deserialize error and throw exception
-                ApiError error = mapper.readError(response.body(), response.statusCode());
-                throw getApiException(error, response);
+                handleHttpError(response);
             }
 
             // deserialize
@@ -249,5 +292,30 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
             Thread.currentThread().interrupt();
             throw new InterledgerClientException(e);
         }
+    }
+
+    /**
+     * Handles HTTP error responses with different logging and error handling strategies
+     * based on status code ranges
+     *
+     * @param response the HTTP response with error status code
+     * @throws InterledgerClientException wrapping the appropriate error information
+     */
+    private void handleHttpError(HttpResponse<String> response) throws InterledgerClientException, IOException {
+        int statusCode = response.statusCode();
+        ApiError error = mapper.readError(response.body(), statusCode);
+
+        if (statusCode >= 400 && statusCode < 500) {
+            // 4xx - Client errors (bad request, unauthorized, forbidden, not found, etc.)
+            LOGGER.warn("Client error [{}]: {}", statusCode, error.description);
+        } else if (statusCode >= 500 && statusCode < 600) {
+            // 5xx - Server errors (internal server error, bad gateway, service unavailable, etc.)
+            LOGGER.error("Server error [{}]: {}", statusCode, error.description);
+        } else {
+            // Other non-2xx status codes (1xx, 3xx, or unexpected codes)
+            LOGGER.warn("Unexpected HTTP status [{}]: {}", statusCode, error.description);
+        }
+
+        throw getApiException(error, response);
     }
 }

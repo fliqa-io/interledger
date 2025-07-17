@@ -30,4 +30,18 @@ public class Quote {
 
     @JsonProperty(value = "walletAddress", required = true)
     public URI walletAddress;
+
+    @Override
+    public String toString() {
+        return "Quote{" +
+                "createdAt=" + createdAt +
+                ", expiresAt=" + expiresAt +
+                ", debitAmount=" + debitAmount +
+                ", id=" + id +
+                ", method='" + method + '\'' +
+                ", receiveAmount=" + receiveAmount +
+                ", receiver=" + receiver +
+                ", walletAddress=" + walletAddress +
+                '}';
+    }
 }
