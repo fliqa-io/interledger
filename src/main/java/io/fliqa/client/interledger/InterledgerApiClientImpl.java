@@ -102,8 +102,8 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(paymentRequest)
-                .target(receiver.resourceServer + "/incoming-payments")
-                .accessToken(pendingGrant.access.token)
+                .target(buildResourceUrl(receiver.resourceServer, "/incoming-payments"))
+                .accessToken(extractAccessToken(pendingGrant))
                 .getRequest(options);
 
         return send(request, IncomingPayment.class);
@@ -133,7 +133,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(quoteRequest)
-                .target(sender.resourceServer + "/quotes")
+                .target(buildResourceUrl(sender.resourceServer, "/quotes"))
                 .accessToken(quoteToken)
                 .getRequest(options);
 
@@ -165,7 +165,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(ref)
                 .target(outgoingPayment.paymentContinue.uri)
-                .accessToken(outgoingPayment.paymentContinue.access.token)
+                .accessToken(extractContinueAccessToken(outgoingPayment))
                 .getRequest(options);
 
         return send(request, AccessGrant.class);
@@ -180,8 +180,8 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
 
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .POST(outgoingPayment)
-                .target(senderWallet.resourceServer + "/outgoing-payments")
-                .accessToken(finalizedGrant.access.token)
+                .target(buildResourceUrl(senderWallet.resourceServer, "/outgoing-payments"))
+                .accessToken(extractAccessToken(finalizedGrant))
                 .getRequest(options);
 
         return send(request, Payment.class);
@@ -193,10 +193,39 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
                 .GET()
                 .target(payment.id)
-                .accessToken(grant.access.token)
+                .accessToken(extractAccessToken(grant))
                 .getRequest(options);
 
         return send(request, IncomingPayment.class);
+    }
+
+    /**
+     * Extracts access token from AccessGrant
+     * @param grant the access grant containing the token
+     * @return the access token string
+     */
+    private String extractAccessToken(AccessGrant grant) {
+        return grant.access.token;
+    }
+
+    /**
+     * Extracts access token from OutgoingPayment's continue access
+     * @param outgoingPayment the outgoing payment containing continue access
+     * @return the access token string
+     */
+    private String extractContinueAccessToken(OutgoingPayment outgoingPayment) {
+        return outgoingPayment.paymentContinue.access.token;
+    }
+
+    /**
+     * Safely builds a resource URL by appending a path to a base URI
+     * @param baseUri the base URI
+     * @param path the path to append (should start with / or will be prepended)
+     * @return the constructed URI
+     */
+    private URI buildResourceUrl(URI baseUri, String path) {
+        String normalizedPath = path.startsWith("/") ? path : "/" + path;
+        return baseUri.resolve(normalizedPath);
     }
 
     public <T> T send(HttpRequest request, Class<T> responseType) throws InterledgerClientException {
