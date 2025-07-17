@@ -124,12 +124,27 @@ publishing {
                 description.set("Java client for Interledger Open Payments protocol")
                 url.set("https://github.com/fliqa-io/interledger")
 
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        distribution.set("repo")
+                    }
+                }
+
                 developers {
                     developer {
                         id.set("azavrsnik")
                         name.set("Andrej Završnik")
                         email.set("andrej@fliqa.io")
+                        organization.set("Fliqa")
+                        organizationUrl.set("https://fliqa.io")
                     }
+                }
+
+                organization {
+                    name.set("Fliqa")
+                    url.set("https://fliqa.io")
                 }
 
                 scm {

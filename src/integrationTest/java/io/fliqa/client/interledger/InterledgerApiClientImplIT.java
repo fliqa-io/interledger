@@ -1,3 +1,18 @@
+/*
+ * Copyright 2025 Fliqa
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.fliqa.client.interledger;
 
 import io.fliqa.client.TestHelper;
@@ -24,8 +39,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 class InterledgerApiClientImplIT {
 
     private static final Logger log = getLogger(InterledgerApiClientImplIT.class);
-
-    private static final int TRANSACTION_TIMEOUT = 120;
     private InterledgerApiClientImpl client;
 
     @BeforeEach
@@ -33,7 +46,7 @@ class InterledgerApiClientImplIT {
         PrivateKey privateKey = TestHelper.getPrivateKey();
         WalletAddress clientWallet = new WalletAddress(TestHelper.getClientWalletAddress());
 
-        InterledgerClientOptions options = new InterledgerClientOptions(10, 10, TRANSACTION_TIMEOUT);
+        InterledgerClientOptions options = new InterledgerClientOptions(10, 10, 120);
 
         client = new InterledgerApiClientImpl(clientWallet,
                 privateKey,
@@ -94,13 +107,13 @@ class InterledgerApiClientImplIT {
      * Flow Overview:
      * 1. Discovery: Get wallet information for both receiver and sender
      * 2. Authorization: Create access grants for receiving and sending
-     * 3. Payment Setup: Create incoming payment request with amount
+     * 3. Payment Setup: Create an incoming payment request with amount
      * 4. Quote Generation: Calculate transaction costs and fees
      * 5. User Interaction: Redirect user to approve payment in their wallet
      * 6. Payment Finalization: Complete the payment after user approval
      * 7. Status Monitoring: Track payment completion status
      * <p>
-     * Note: This test requires manual interaction (clicking redirect link and entering
+     * Note: This test requires manual interaction (clicking the redirect link and entering
      * the interact_ref parameter) to simulate real user wallet interaction.
      */
     @Test
@@ -234,7 +247,7 @@ class InterledgerApiClientImplIT {
         log.info("********");
         log.info("STEP 7: Monitor payment completion status");
         int count = 0;
-        while (!payment.completed && count < 10) {
+        while (!payment.completed && count < 10) { // wait at least 10s ...
             count++;
 
             payment = client.getIncomingPayment(incomingPayment, grantRequest);
@@ -243,7 +256,7 @@ class InterledgerApiClientImplIT {
             log.info("Payment status check #" + count + " - Completed: " + payment.completed);
 
             if (!payment.completed) {
-                sleep(1000); // Wait 1 second before next check
+                sleep(1000); // Wait 1 second before the next check
             }
         }
 
