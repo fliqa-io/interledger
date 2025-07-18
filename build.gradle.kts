@@ -1,6 +1,8 @@
 plugins {
     id("java")
     id("maven-publish")
+    id("signing")
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
 group = "io.fliqa"
@@ -18,6 +20,8 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))
     }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 val jacksonVersion = "2.17.1"
@@ -103,6 +107,18 @@ dependencies {
     "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 }
 
+// Nexus publishing configuration for Maven Central
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?)
+            password.set(System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?)
+        }
+    }
+}
+
 publishing {
     repositories {
         maven {
@@ -154,5 +170,17 @@ publishing {
                 }
             }
         }
+    }
+}
+
+// Signing configuration for Maven Central
+signing {
+    val signingKeyId = System.getenv("SIGNING_KEY_ID") ?: project.findProperty("signing.keyId") as String?
+    val signingPassword = System.getenv("SIGNING_PASSWORD") ?: project.findProperty("signing.password") as String?
+    val signingSecretKey = System.getenv("SIGNING_SECRET_KEY") ?: project.findProperty("signing.secretKey") as String?
+    
+    if (signingKeyId != null && signingPassword != null && signingSecretKey != null) {
+        useInMemoryPgpKeys(signingKeyId, signingSecretKey, signingPassword)
+        sign(publishing.publications["maven"])
     }
 }

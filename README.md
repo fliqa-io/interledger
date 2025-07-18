@@ -1,9 +1,10 @@
 # Fliqa / Interledger Open Payments API Client
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CI/CD](https://github.com/fliqa-io/interledger/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/fliqa-io/interledger/actions)
 [![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.org/)
+[![Maven Central](https://img.shields.io/maven-central/v/io.fliqa/interledger-client.svg)](https://search.maven.org/artifact/io.fliqa/interledger-client)
 [![GitHub Issues](https://img.shields.io/github/issues/fliqa-io/interledger.svg)](https://github.com/fliqa-io/interledger/issues)
-[![GitHub Stars](https://img.shields.io/github/stars/fliqa-io/interledger.svg)](https://github.com/fliqa-io/interledger/stargazers)
 
 A Java client library for Fliqa specific use-cases for the [Interledger Open Payments](https://openpayments.guide/)
 protocol, providing secure and efficient payment facilitation capabilities.
