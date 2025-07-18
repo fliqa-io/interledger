@@ -80,6 +80,13 @@ tasks.test {
     }
 }
 
+tasks.withType<Javadoc>().configureEach {
+    (options as StandardJavadocDocletOptions).apply {
+        addStringOption("Xdoclint:all/public")
+    }
+    isFailOnError = false
+}
+
 dependencies {
     // Logging
     implementation("org.slf4j:slf4j-api:$loggerVersion")
@@ -178,7 +185,7 @@ signing {
     val signingKeyId = System.getenv("SIGNING_KEY_ID") ?: project.findProperty("signing.keyId") as String?
     val signingPassword = System.getenv("SIGNING_PASSWORD") ?: project.findProperty("signing.password") as String?
     val signingSecretKey = System.getenv("SIGNING_SECRET_KEY") ?: project.findProperty("signing.secretKey") as String?
-    
+
     if (signingKeyId != null && signingPassword != null && signingSecretKey != null) {
         useInMemoryPgpKeys(signingKeyId, signingSecretKey, signingPassword)
         sign(publishing.publications["maven"])

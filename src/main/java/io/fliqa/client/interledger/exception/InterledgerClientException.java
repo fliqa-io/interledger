@@ -59,8 +59,19 @@ public class InterledgerClientException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Http error code
+     */
     private int code = 0;
+
+    /**
+     * Response headers
+     */
     private HttpHeaders responseHeaders = null;
+
+    /**
+     * Response body
+     */
     private String responseBody = null;
 
     /**

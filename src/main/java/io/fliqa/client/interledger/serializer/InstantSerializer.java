@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
+@SuppressWarnings("javadoc")
 public class InstantSerializer extends JsonSerializer<Instant> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
 

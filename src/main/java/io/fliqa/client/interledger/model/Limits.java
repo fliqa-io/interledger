@@ -45,7 +45,7 @@ public class Limits {
      * the specified incoming payment endpoint. This provides fine-grained
      * control over which payment destinations can be accessed.
      * 
-     * <p>Example: "https://ilp.example.com/incoming-payments/123e4567-e89b-12d3-a456-426614174000"
+     * <p>Example: "https://ilp.interledger-test.dev/incoming-payments/123e4567-e89b-12d3-a456-426614174000"
      * 
      * @see <a href="https://openpayments.guide/">Open Payments specification</a>
      */

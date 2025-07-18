@@ -47,7 +47,7 @@ public class IncomingPayment {
      * by senders to reference this payment destination when creating quotes
      * and outgoing payments.
      * 
-     * <p>Example: "https://ilp.example.com/incoming-payments/123e4567-e89b-12d3-a456-426614174000"
+     * <p>Example: "https://ilp.interledger-test.dev/incoming-payments/123e4567-e89b-12d3-a456-426614174000"
      */
     @JsonProperty(value = "id", required = true)
     public URI id;

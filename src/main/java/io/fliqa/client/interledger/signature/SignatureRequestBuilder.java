@@ -102,8 +102,15 @@ public class SignatureRequestBuilder {
     static final String SIGNATURE_INPUT_HEADER = "Signature-Input";
     static final String SIGNATURE_HEADER = "Signature";
     static final String AUTHORIZATION_HEADER = "Authorization";
+
+    /**
+     * Accept http header
+     */
     public static final String ACCEPT_HEADER = "Accept";
 
+    /**
+     * application/json content-type header value
+     */
     public static final String APPLICATION_JSON = "application/json";
 
     static final String DEFAULT_SIGNATURE_ID = "sig1";
@@ -274,6 +281,12 @@ public class SignatureRequestBuilder {
         return parameters.get(METHOD).toString();
     }
 
+    /**
+     * Sets the target URI for the signature request.
+     *
+     * @param value the target URI as a string
+     * @return the updated SignatureRequestBuilder instance
+     */
     public SignatureRequestBuilder target(String value) {
         return target(URI.create(value));
     }
@@ -376,7 +389,7 @@ public class SignatureRequestBuilder {
         }
     }
 
-    protected void setSignatureParams() {
+    void setSignatureParams() {
 
         Assert.isTrue(created > 0, "Created timestamp must be set before calculating signature params!");
 
@@ -446,6 +459,15 @@ public class SignatureRequestBuilder {
         return URI.create(parameters.get(TARGET).toString());
     }
 
+    /**
+     * Constructs and returns the signature parameters header as a formatted string.
+     * <p>
+     * The method validates the state before retrieving the signature parameters
+     * from the parameters map using the key SIGNATURE_PARAMS. Then, it formats
+     * and returns the signature identifier and the retrieved parameters as a string.
+     *
+     * @return the signature parameters header in the format "DEFAULT_SIGNATURE_ID=signatureParams".
+     */
     public String getSignatureParamsHeader() {
 
         checkIsBuild();
@@ -535,7 +557,7 @@ public class SignatureRequestBuilder {
         }
     }
 
-    protected String getSignatureHeader() {
+    String getSignatureHeader() {
         return String.format("%s=:%s:", DEFAULT_SIGNATURE_ID, getSignature());
     }
 
@@ -578,6 +600,11 @@ public class SignatureRequestBuilder {
         return headers;
     }
 
+    /**
+     * Retrieves the JSON body of the HTTP request.
+     *
+     * @return the request body as a string, or null if no body is set
+     */
     public String getBody() {
         return body;
     }
@@ -596,6 +623,14 @@ public class SignatureRequestBuilder {
         return getBuilder(options).build();
     }
 
+    /**
+     * Constructs and returns an {@link HttpRequest.Builder} object based on the configured parameters, headers,
+     * and body. If the required signature parameters are not built, they will be initialized before creating the builder.
+     *
+     * @param options The {@link InterledgerClientOptions} containing the timeout configuration for the request.
+     * @return An {@link HttpRequest.Builder} instance configured with the appropriate target URI, HTTP method,
+     * headers, body, and timeout.
+     */
     public HttpRequest.Builder getBuilder(InterledgerClientOptions options) {
         // build if not already
         if (parameters.get(SIGNATURE_PARAMS) == null) {

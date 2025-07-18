@@ -356,7 +356,7 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     /**
      * Sends an HTTP request and processes the response to return the desired type.
      *
-     * @param <T>          the type of the response object to be returned after deserialization
+     * @param <T>          represents the type of the response object to be returned after deserialization.
      * @param request      the HTTP request to be sent
      * @param responseType the class type of the response object to be returned
      * @return the deserialized response of type T

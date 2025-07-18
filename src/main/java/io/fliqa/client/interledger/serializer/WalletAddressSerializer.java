@@ -22,6 +22,24 @@ import io.fliqa.client.interledger.model.WalletAddress;
 
 import java.io.IOException;
 
+/**
+ * A custom serializer for the {@link WalletAddress} class.
+ * <p>
+ * This serializer is used to serialize a {@link WalletAddress} object into its
+ * JSON representation. Specifically, it writes the string value of the wallet's
+ * payment pointer URI to the JSON output. The serialization process ensures
+ * that only the payment pointer is included as a string in the resulting JSON.
+ * <p>
+ * This serializer is useful for applications that need to interact with
+ * JSON-based APIs where wallet addresses are exchanged in a lightweight
+ * string format instead of a structured object.
+ * <p>
+ * This class extends {@link JsonSerializer} and overrides the {@code serialize}
+ * method to define the custom serialization logic for {@link WalletAddress}.
+ *
+ * @see WalletAddress
+ * @see JsonSerializer
+ */
 public class WalletAddressSerializer extends JsonSerializer<WalletAddress> {
 
     @Override
