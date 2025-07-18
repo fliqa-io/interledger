@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("maven-publish")
     id("signing")
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "io.fliqa"
@@ -128,16 +129,7 @@ publishing {
                 password = project.findProperty("github.token") as String? ?: System.getenv("PACKAGES_TOKEN")
             }
         }
-        
-        // Central Portal repository for Maven Central
-        maven {
-            name = "Central"
-            url = uri("https://central.sonatype.com/api/v1/publisher/upload")
-            credentials {
-                username = System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?
-                password = System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?
-            }
-        }
+
     }
 
     publications {
@@ -181,6 +173,19 @@ publishing {
                     url.set("https://github.com/fliqa-io/interledger")
                 }
             }
+        }
+    }
+}
+
+// Nexus Publishing configuration for Central Portal
+nexusPublishing {
+    repositories {
+        sonatype {
+            // Central Portal tokens work with OSSRH endpoints for new namespaces
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            username.set(System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?)
+            password.set(System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?)
         }
     }
 }
