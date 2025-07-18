@@ -6,19 +6,33 @@
 [![GitHub Stars](https://img.shields.io/github/stars/fliqa-io/interledger.svg)](https://github.com/fliqa-io/interledger/stargazers)
 
 A Java client library for Fliqa specific use-cases for the [Interledger Open Payments](https://openpayments.guide/)
-protocol,
-providing secure and efficient payment facilitation capabilities.
-
-## Features
-
-- **🔐 Cryptographic Security**: Ed25519 signature-based request authentication
-- **🏦 Payment Facilitation**: Complete 7-step Interledger payment workflow
-- **⚡ High Performance**: Built on Java 11+ HTTP client with connection pooling
-- **🛡️ Comprehensive Error Handling**: Detailed exception handling with HTTP status codes
-- **📝 Extensive Documentation**: JavaDoc documentation for all public APIs
-- **🧪 Well Tested**: Comprehensive unit and integration test coverage
+protocol, providing secure and efficient payment facilitation capabilities.
 
 ## Quick Start
+
+## Scope and Coverage
+
+This client library implements the **some but not all Interledger Open Payments workflows** needed for payment
+facilitation,
+with a focus on production-ready, secure payment processing. The implementation covers:
+
+- ✅ **Payment Pointer Discovery** - Wallet information retrieval
+- ✅ **Grant Management** - Access token and permission handling
+- ✅ **Payment Processing** - Complete 7-step payment workflow
+- ✅ **Quote Generation** - Transaction cost calculation
+- ✅ **Cryptographic Security** - Ed25519 request signing
+- ✅ **Error Handling** - Comprehensive exception management
+
+### Expanding Coverage
+
+We welcome contributions to expand the client's capabilities! If you need additional Interledger protocol features:
+
+1. **Check existing issues** for planned enhancements
+2. **Open a feature request** to discuss your needs
+3. **Submit a pull request** with your implementation
+4. **See our [Contributing Guide](#contributing)** for development guidelines
+
+The current implementation provides a solid foundation that can be extended to support additional Interledger use cases.
 
 ### Dependencies
 
