@@ -12,6 +12,9 @@ version = "1.0.0-SNAPSHOT"
 val projectVersion = project.findProperty("release.version") as String? ?: version
 version = projectVersion
 
+// Set a proper artifact name
+val artifactName = "interledger-client"
+
 repositories {
     mavenCentral()
 }
@@ -141,7 +144,10 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-
+            
+            // Set the artifact name explicitly  
+            artifactId = artifactName
+            
             pom {
                 name.set("Interledger API Client")
                 description.set("Java client for Interledger Open Payments protocol")
@@ -150,7 +156,7 @@ publishing {
                 licenses {
                     license {
                         name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
                         distribution.set("repo")
                     }
                 }
