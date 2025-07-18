@@ -34,7 +34,7 @@ import java.util.function.Consumer;
  * requests and responses at different log levels to support both development debugging and production
  * monitoring.
  *
- * <h3>Why This Logger is Needed</h3>
+ * <h2>Why This Logger is Needed</h2>
  * <ul>
  *   <li><strong>Payment Flow Debugging</strong> - Track Interledger payment process with detailed request/response logs</li>
  *   <li><strong>Signature Verification</strong> - Log signed request headers to verify Ed25519 signature generation</li>

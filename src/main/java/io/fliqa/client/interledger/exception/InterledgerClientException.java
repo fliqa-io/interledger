@@ -28,7 +28,7 @@ import java.net.http.HttpResponse;
  * It provides access to HTTP status codes, response headers, and response bodies when
  * available to help with debugging and error handling.
  *
- * <h3>Error Categories</h3>
+ * <h2>Error Categories</h2>
  * <ul>
  *   <li><strong>Network Errors</strong> - Connection timeouts, DNS failures, network unreachable</li>
  *   <li><strong>Client Errors (4xx)</strong> - Invalid requests, authentication failures, not found</li>
@@ -109,19 +109,50 @@ public class InterledgerClientException extends Exception {
         this(message, (Throwable) null, code, responseHeaders, responseBody);
     }
 
+    /**
+     * Constructs a new InterledgerClientException with full HTTP response details and an underlying cause.
+     *
+     * @param message         the error message associated with this exception
+     * @param throwable       the underlying cause of this exception
+     * @param code            the HTTP status code associated with this exception
+     * @param responseHeaders the HTTP response headers returned by the server
+     */
     public InterledgerClientException(String message, Throwable throwable, int code, HttpHeaders responseHeaders) {
         this(message, throwable, code, responseHeaders, null);
     }
 
+    /**
+     * Constructs a new InterledgerClientException with the specified HTTP status code,
+     * response headers, and response body.
+     *
+     * @param code            the HTTP status code
+     * @param responseHeaders the HTTP response headers
+     * @param responseBody    the HTTP response body
+     */
     public InterledgerClientException(int code, HttpHeaders responseHeaders, String responseBody) {
         this((String) null, (Throwable) null, code, responseHeaders, responseBody);
     }
 
+    /**
+     * Constructs a new InterledgerClientException with an HTTP status code and error message.
+     *
+     * @param code    the HTTP status code associated with this exception
+     * @param message the error message describing the exception
+     */
     public InterledgerClientException(int code, String message) {
         super(message);
         this.code = code;
     }
 
+    /**
+     * Constructs a new InterledgerClientException with an HTTP status code, error message,
+     * response headers, and response body.
+     *
+     * @param code            the HTTP status code associated with this exception
+     * @param message         the error message describing the exception
+     * @param responseHeaders the HTTP response headers returned by the server
+     * @param responseBody    the HTTP response body as a string
+     */
     public InterledgerClientException(int code, String message, HttpHeaders responseHeaders, String responseBody) {
         this(code, message);
         this.responseHeaders = responseHeaders;

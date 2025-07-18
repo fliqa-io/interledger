@@ -27,7 +27,7 @@ import java.net.URI;
  * resource server URLs. This class contains the resolved wallet metadata retrieved
  * from the payment pointer's well-known endpoint.
  * 
- * <h3>Asset Information</h3>
+ * <h2>Asset Information</h2>
  * <p>The asset code and scale define the currency and precision supported by this wallet:
  * <ul>
  *   <li><strong>Asset Code</strong> - Currency code (e.g., "EUR", "USD")</li>

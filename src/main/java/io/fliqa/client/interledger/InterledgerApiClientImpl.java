@@ -46,7 +46,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
  * The client is designed for Fliqa's payment facilitation use cases where Fliqa
  * acts as an intermediary between payment senders and receivers.
  *
- * <h3>Features</h3>
+ * <h2>Features</h2>
  * <ul>
  *   <li>Cryptographic request signing using Ed25519 private keys</li>
  *   <li>HTTP/2 client with configurable timeouts and connection limits</li>
@@ -353,6 +353,16 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         return baseUri.resolve(normalizedPath);
     }
 
+    /**
+     * Sends an HTTP request and processes the response to return the desired type.
+     *
+     * @param <T>          the type of the response object to be returned after deserialization
+     * @param request      the HTTP request to be sent
+     * @param responseType the class type of the response object to be returned
+     * @return the deserialized response of type T
+     * @throws InterledgerClientException if an error occurs during the request, response handling,
+     *                                    or deserialization process
+     */
     public <T> T send(HttpRequest request, Class<T> responseType) throws InterledgerClientException {
         try {
             httpLogger.logRequest(request);

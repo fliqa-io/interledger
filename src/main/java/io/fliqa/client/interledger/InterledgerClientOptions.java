@@ -22,7 +22,7 @@ package io.fliqa.client.interledger;
  * request timeouts, and transaction expiration settings. These options control the
  * behavior of the underlying HTTP client and payment processing timeouts.
  *
- * <h3>Timeout Settings</h3>
+ * <h2>Timeout Settings</h2>
  * <ul>
  *   <li><strong>Connect Timeout</strong> - Maximum time to establish HTTP connections</li>
  *   <li><strong>Request Timeout</strong> - Maximum time for individual HTTP requests</li>

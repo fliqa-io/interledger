@@ -54,11 +54,30 @@ public class InterledgerObjectMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InterledgerObjectMapper.class);
 
+    /**
+     * Constructs a new {@code InterledgerObjectMapper} instance by initializing
+     * two {@link ObjectMapper} objects:
+     * <p>
+     * 1. A default {@link ObjectMapper}, configured via the {@code get()} method.
+     * 2. An unwrap-specific {@link ObjectMapper}, configured via the {@code getUnwrapMapper()} method.
+     * <p>
+     * These mappers are used for JSON serialization and deserialization, providing
+     * preconfigured behavior such as support for {@link Instant} handling,
+     * consistent map entry ordering, and additional unwrap functionality.
+     */
     public InterledgerObjectMapper() {
         mapper = get();
         unwrapMapper = getUnwrapMapper();
     }
 
+    /**
+     * Configures and returns a preconfigured {@link ObjectMapper} for JSON serialization and deserialization.
+     * The returned {@link ObjectMapper} ensures consistent ordering of map entries, custom handling of
+     * {@link Instant} serialization and deserialization, and omits null values during serialization.
+     * It is also configured to ignore unknown properties when deserializing JSON.
+     *
+     * @return a preconfigured {@link ObjectMapper} instance.
+     */
     public static ObjectMapper get() {
         ObjectMapper mapper = new ObjectMapper();
 

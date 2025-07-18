@@ -28,7 +28,7 @@ import java.util.function.Supplier;
  * states. All assertion methods throw {@link IllegalArgumentException} by default
  * or can accept custom exception suppliers for specific error handling.
  *
- * <h3>Common Usage</h3>
+ * <h2>Common Usage</h2>
  * <pre>{@code
  * public void processPayment(PaymentPointer wallet, BigDecimal amount) {
  *     Assert.notNull(wallet, "Wallet cannot be null");

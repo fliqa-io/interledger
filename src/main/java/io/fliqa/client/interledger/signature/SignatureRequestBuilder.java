@@ -39,7 +39,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
  * Interledger Open Payments servers. All requests are signed using Ed25519 cryptographic
  * signatures.
  *
- * <h3>Signature Process</h3>
+ * <h2>Signature Process</h2>
  * <p>The signing process involves several steps:
  * <ol>
  *   <li><strong>Request Building</strong> - Set HTTP method, target URI, and request body</li>

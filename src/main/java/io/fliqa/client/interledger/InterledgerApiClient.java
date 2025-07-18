@@ -29,7 +29,7 @@ import java.net.URI;
  * Interledger flows but focuses on the core payment workflows where Fliqa acts
  * as an intermediary between senders and receivers.
  * 
- * <h3>Configuration Requirements</h3>
+ * <h2>Configuration Requirements</h2>
  * <ul>
  *   <li>Client wallet address (payment facilitator/initiator)</li>
  *   <li>Ed25519 private key for request signing</li>
