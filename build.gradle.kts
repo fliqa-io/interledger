@@ -125,15 +125,14 @@ if (System.getenv("SONATYPE_USERNAME") != null || project.findProperty("sonatype
     nexusPublishing {
         repositories {
             sonatype {
-                nexusUrl.set(uri("https://central.sonatype.com/api/v1/publisher/"))
-                snapshotRepositoryUrl.set(uri("https://central.sonatype.com/api/v1/publisher/"))
+                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
                 username.set(System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?)
                 password.set(System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?)
             }
         }
 
-        // Configure for Central Portal
-        useStaging.set(false) // Central Portal doesn't use staging
+        // Configure for OSSRH
         transitionCheckOptions {
             maxRetries.set(60)
             delayBetween.set(Duration.ofSeconds(10))
