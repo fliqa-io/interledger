@@ -127,7 +127,7 @@ public class SignatureRequestBuilder {
     final String keyId;
 
     /**
-     * Unix timestamp when the signature was created (for replay protection).
+     * Unix timestamp when the signature was created / epoch in seconds (for replay protection).
      */
     private long created = 0;
 
@@ -164,16 +164,11 @@ public class SignatureRequestBuilder {
 
         this.privateKey = privateKey;
         this.keyId = keyId;
-
-        if (mapper == null) {
-            mapper = new InterledgerObjectMapper();
-        }
-
-        this.mapper = mapper;
+        this.mapper = mapper == null ? new InterledgerObjectMapper() : mapper;
     }
 
     /**
-     * Creates a new signature request builder with default JSON mapper.
+     * Creates a new signature request builder with the default JSON mapper.
      *
      * @param privateKey Ed25519 private key for signing requests (must not be null)
      * @param keyId      identifier for the private key (must not be null or blank)
@@ -212,27 +207,57 @@ public class SignatureRequestBuilder {
         return method("POST").json(body);
     }
 
+    /**
+     * Sets the HTTP method for the request to POST without the request body.
+     *
+     * @return this builder for method chaining
+     * @throws IllegalArgumentException if the method is already set
+     */
     public SignatureRequestBuilder POST() {
         checkMethod();
         return method("POST");
     }
 
+    /**
+     * Sets the HTTP method for the request to PUT and serializes the body as JSON.
+     *
+     * @param body the object to serialize as the JSON request body
+     * @return this builder instance for method chaining
+     * @throws IllegalArgumentException if the method is already set or if body serialization fails
+     */
     public SignatureRequestBuilder PUT(Object body) {
         checkMethod();
         return method("PUT").json(body);
     }
 
     /**
+     * Sets the HTTP method for the request to PUT without the request body.
+     *
+     * @return this builder instance for method chaining
+     * @throws IllegalArgumentException if the method is already set
+     */
+    public SignatureRequestBuilder PUT() {
+        checkMethod();
+        return method("PUT");
+    }
+
+    /**
      * Sets the request method to GET.
      *
      * @return this builder for method chaining
-     * @throws IllegalArgumentException if method is already set
+     * @throws IllegalArgumentException if the method is already set
      */
     public SignatureRequestBuilder GET() {
         checkMethod();
         return method("GET");
     }
 
+    /**
+     * Set the request method to DELETE.
+     *
+     * @return this builder for method chaining
+     * @throws IllegalArgumentException if the method is already set
+     */
     public SignatureRequestBuilder DELETE() {
         checkMethod();
         return method("DELETE");
@@ -240,9 +265,9 @@ public class SignatureRequestBuilder {
 
     /**
      * Gets the configured HTTP method.
-     * 
+     *
      * @return the HTTP method (GET, POST, PUT, DELETE, HEAD)
-     * @throws IllegalArgumentException if method has not been set
+     * @throws IllegalArgumentException if the method has not been set
      */
     public String getMethod() {
         checkHasParameter(METHOD);
@@ -270,11 +295,11 @@ public class SignatureRequestBuilder {
 
     /**
      * Sets the request body by serializing an object to JSON.
-     * 
+     *
      * <p>This method automatically serializes the provided object to JSON using
      * the configured ObjectMapper and then calls {@link #json(String)} to set
      * all required headers.
-     * 
+     *
      * @param object object to serialize as JSON request body
      * @return this builder for method chaining
      * @throws IllegalArgumentException if object serialization fails
@@ -299,14 +324,14 @@ public class SignatureRequestBuilder {
      *   <li>Generates SHA-512 Content-Digest header</li>
      * </ul>
      *
-     * @param json JSON string to set as request body
+     * @param json JSON string to set as the request body
      * @return this builder for method chaining
-     * @throws IllegalArgumentException if JSON is null or blank
+     * @throws IllegalArgumentException if JSON is null or empty
      */
     public SignatureRequestBuilder json(String json) {
-        if (json == null || json.isBlank()) {
-            throw new IllegalArgumentException("JSON must not be null or empty!");
-        }
+
+        Assert.notNullOrEmpty(json, "JSON cannot be null or empty!");
+
         body = json;
         digest(json);
         length(json);
@@ -322,13 +347,11 @@ public class SignatureRequestBuilder {
      *
      * @param token access token for API authorization
      * @return this builder for method chaining
-     * @throws IllegalArgumentException if token is null or blank
+     * @throws IllegalArgumentException if the token is null or empty
      */
     public SignatureRequestBuilder accessToken(String token) {
 
-        if (token == null || token.isBlank()) {
-            throw new IllegalArgumentException("Token must not be null or empty!");
-        }
+        Assert.notNullOrEmpty(token, "Token cannot be null or empty!");
 
         parameters.put(AUTHORIZATION_HEADER, prepareToken(token));
         return this;
@@ -354,6 +377,8 @@ public class SignatureRequestBuilder {
     }
 
     protected void setSignatureParams() {
+
+        Assert.isTrue(created > 0, "Created timestamp must be set before calculating signature params!");
 
         String signatureParams = parameters.keySet().stream()
                 .map(item -> "\"" + item.toLowerCase() + "\"")  // Quote each item, need to be lower case
@@ -383,11 +408,11 @@ public class SignatureRequestBuilder {
      * which is useful for testing or when you need precise control over the
      * signature timestamp for replay attack prevention.
      *
-     * @param created Unix timestamp in seconds when the signature was created
+     * @param createdInSeconds Unix timestamp in seconds when the signature was created
      * @return this builder for method chaining
      */
-    public SignatureRequestBuilder build(long created) {
-        this.created = created;
+    public SignatureRequestBuilder build(long createdInSeconds) {
+        this.created = createdInSeconds;
         setSignatureParams();
         return this;
     }
@@ -399,9 +424,7 @@ public class SignatureRequestBuilder {
      * @return URL that ends with '/'
      */
     private String prepareTarget(URI value) {
-        if (value == null) {
-            throw new IllegalArgumentException("Target URI must not be null!");
-        }
+        Assert.notNull(value, "Target URI cannot be null!");
 
         // We must fix target so it conforms to expectations
         String out = value.toString();
@@ -414,7 +437,7 @@ public class SignatureRequestBuilder {
 
     /**
      * Gets the configured target URI.
-     * 
+     *
      * @return the target URI for the HTTP request
      * @throws IllegalArgumentException if target has not been set
      */
@@ -438,15 +461,11 @@ public class SignatureRequestBuilder {
     }
 
     private void checkHasParameter(String key) {
-        if (parameters.get(key) == null) {
-            throw new IllegalArgumentException(String.format("Parameter '%s' must be set before continuing!", key));
-        }
+        Assert.isTrue(parameters.containsKey(key), String.format("Parameter '%s' must be set before continuing!", key));
     }
 
     private void checkMethod() {
-        if (parameters.containsKey(METHOD)) {
-            throw new IllegalArgumentException(String.format("Method '%s' already set!", parameters.get(METHOD)));
-        }
+        Assert.isFalse(parameters.get(METHOD) == null, String.format("Method '%s' already set!", parameters.get(METHOD)));
     }
 
     /**
@@ -478,11 +497,11 @@ public class SignatureRequestBuilder {
 
     /**
      * Calculates SHA-512 content digest for request body integrity.
-     * 
+     *
      * <p>This method generates a SHA-512 hash of the content and returns it
      * as a Base64-encoded string. The content digest is used to ensure that
      * the request body has not been tampered with during transmission.
-     * 
+     *
      * @param content request body content to create digest for
      * @return Base64-encoded SHA-512 digest of the content
      * @throws IllegalArgumentException if content is null or empty
@@ -490,9 +509,7 @@ public class SignatureRequestBuilder {
      */
     protected static String digestContentSha512(String content) throws NoSuchAlgorithmException {
 
-        if (content == null || content.isBlank()) {
-            throw new IllegalArgumentException("Content must not be null or empty!");
-        }
+        Assert.notNullOrEmpty(content, "Content must not be null or empty!");
 
         MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM.toUpperCase());
         byte[] bodyBytes = content.getBytes(StandardCharsets.UTF_8);
@@ -524,7 +541,7 @@ public class SignatureRequestBuilder {
 
     /**
      * Gets all HTTP headers for the signed request.
-     * 
+     *
      * <p>This method returns all headers required for the signed request including:
      * <ul>
      *   <li>Accept header (application/json)</li>
@@ -534,7 +551,7 @@ public class SignatureRequestBuilder {
      *   <li>Signature-Input header with signature parameters</li>
      *   <li>Signature header with the actual signature</li>
      * </ul>
-     * 
+     *
      * @return ordered map of HTTP headers for the request
      * @throws IllegalStateException if signature has not been built yet
      */

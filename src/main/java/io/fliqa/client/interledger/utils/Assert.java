@@ -22,12 +22,12 @@ import java.util.function.Supplier;
 
 /**
  * Utility class providing assertion methods for input validation.
- * 
+ *
  * <p>This class provides a collection of static assertion methods used throughout
  * the Interledger client for validating method parameters and preventing invalid
  * states. All assertion methods throw {@link IllegalArgumentException} by default
  * or can accept custom exception suppliers for specific error handling.
- * 
+ *
  * <h3>Common Usage</h3>
  * <pre>{@code
  * public void processPayment(PaymentPointer wallet, BigDecimal amount) {
@@ -35,7 +35,7 @@ import java.util.function.Supplier;
  *     Assert.isTrue(amount.compareTo(BigDecimal.ZERO) > 0, "Amount must be positive");
  * }
  * }</pre>
- * 
+ *
  * @author Fliqa
  * @version 1.0
  * @since 1.0
@@ -50,8 +50,8 @@ public final class Assert {
 
     /**
      * Asserts that a boolean condition is true.
-     * 
-     * @param value the boolean condition to check
+     *
+     * @param value   the boolean condition to check
      * @param message the error message if the condition is false
      * @throws IllegalArgumentException if the condition is false
      */
@@ -70,9 +70,30 @@ public final class Assert {
     }
 
     /**
+     * Asserts that a boolean condition is false.
+     *
+     * @param value   the boolean condition to check
+     * @param message the error message if the condition is true
+     * @throws IllegalArgumentException if the condition is true
+     */
+    public static void isFalse(boolean value, String message) {
+        if (value) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    public static <E extends Throwable> void isFalse(
+            boolean value,
+            Supplier<E> exceptionSupplier) throws E {
+        if (value) {
+            throw exceptionSupplier.get();
+        }
+    }
+
+    /**
      * Asserts that an object is not null.
-     * 
-     * @param value the object to check
+     *
+     * @param value   the object to check
      * @param message the error message if the object is null
      * @throws IllegalArgumentException if the object is null
      */
@@ -92,8 +113,8 @@ public final class Assert {
 
     /**
      * Asserts that a string is not null and not blank.
-     * 
-     * @param value the string to check
+     *
+     * @param value   the string to check
      * @param message the error message if the string is null or blank
      * @throws IllegalArgumentException if the string is null or blank
      */

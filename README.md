@@ -1,11 +1,13 @@
-# Interledger Open Payments API Client
+# Fliqa / Interledger Open Payments API Client
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://github.com/fliqa-io/interledger/workflows/CI/badge.svg)](https://github.com/fliqa-io/interledger/actions)
-[![Maven Central](https://img.shields.io/maven-central/v/io.fliqa/interledger-client.svg)](https://search.maven.org/artifact/io.fliqa/interledger-client)
+[![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.org/)
+[![GitHub Issues](https://img.shields.io/github/issues/fliqa-io/interledger.svg)](https://github.com/fliqa-io/interledger/issues)
+[![GitHub Stars](https://img.shields.io/github/stars/fliqa-io/interledger.svg)](https://github.com/fliqa-io/interledger/stargazers)
 
-A Java client library for the [Interledger Open Payments](https://openpayments.guide/) protocol, providing secure and
-efficient payment facilitation capabilities.
+A Java client library for Fliqa specific use-cases for the [Interledger Open Payments](https://openpayments.guide/)
+protocol,
+providing secure and efficient payment facilitation capabilities.
 
 ## Features
 
@@ -135,7 +137,7 @@ Once we have the quote, we can create a redirect link for the sender to confirm 
 
 ### 4. Finalization of payment
 
-If user has confirmed the payment Fliqa needs to finalized it with an additional call to the sender wallet.
+When the user has confirmed the payment, Fliqa needs to finalize it with an additional call to the sender wallet.
 
 ### Final notes
 
@@ -158,7 +160,6 @@ sharing feedback, your contributions help make this project better for everyone.
 - **📖 Documentation**: Help improve our documentation
 - **🔧 Code Contributions**: Submit pull requests for bug fixes or new features
 - **🧪 Testing**: Help expand test coverage or test in different environments
-- **💬 Community Support**: Help answer questions in discussions and issues
 
 ### Development Setup
 
@@ -265,7 +266,7 @@ To report a security vulnerability:
 1. Email [security@fliqa.io](mailto:security@fliqa.io)
 2. Include a detailed description of the vulnerability
 3. Provide steps to reproduce if possible
-4. We'll respond within 48 hours
+4. We'll respond as soon as we can (remember this is an open source project)
 
 ### Security Best Practices
 
@@ -287,26 +288,11 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 - ⚠️ **License Notice**: Must include copyright and license notice
 - ⚠️ **State Changes**: Must indicate significant changes made
 
-## Acknowledgments
-
-- **Interledger Foundation**: For developing the Open Payments specification
-- **Contributors**: Thanks to all who have contributed to this project
-- **Community**: Special thanks to the open source community for feedback and support
-
 ## Roadmap
 
 ### Current Version (1.0.x)
 
-- ✅ Core Interledger Open Payments implementation
-- ✅ Ed25519 signature support
-- ✅ Comprehensive error handling
-- ✅ Integration test suite
-
-### Future Releases
-
-- **1.1.x**: Enhanced logging and monitoring
-- **1.2.x**: Additional currency support
-- **2.0.x**: Async/reactive API support
+- ✅ Core Interledger Open Payments implementation for Fliqa specific use cases
 
 See our [GitHub Milestones](https://github.com/fliqa-io/interledger/milestones) for detailed planning.
 

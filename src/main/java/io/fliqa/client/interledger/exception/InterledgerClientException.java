@@ -166,10 +166,12 @@ public class InterledgerClientException extends Exception {
      * @return a new exception with formatted error message and response details
      */
     public static InterledgerClientException getApiException(ApiError error, HttpResponse<String> response) {
-        String message = formatExceptionMessage(error, response.statusCode());
-        String body = response.body();
+        final String message = formatExceptionMessage(error, response.statusCode());
+        final String body;
         if (response.body() == null) {
             body = "[no body]";
+        } else {
+            body = response.body();
         }
 
         return new InterledgerClientException(response.statusCode(), message, response.headers(), body);
@@ -184,8 +186,8 @@ public class InterledgerClientException extends Exception {
      */
     private static String formatExceptionMessage(ApiError error, int statusCode) {
 
-        String code = error.code == null || error.code.isBlank() ? ">no error code<" : error.code;
-        String description = error.description == null || error.description.isBlank() ? ">no error description<" : error.description;
+        final String code = error.code == null || error.code.isBlank() ? ">no error code<" : error.code;
+        final String description = error.description == null || error.description.isBlank() ? ">no error description<" : error.description;
 
         return "[" + statusCode + "] (" + code + ") " + description;
     }
