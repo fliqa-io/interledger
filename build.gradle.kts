@@ -207,16 +207,16 @@ tasks.register("testSigning") {
 }
 
 // Signing configuration for Maven Central
-afterEvaluate {
+signing {
+    isRequired = false // Optional signing - won't fail if credentials missing
+    
     val keyId = project.findProperty("signing.keyId")?.toString() ?: System.getenv("SIGNING_KEY_ID")
     val password = project.findProperty("signing.password")?.toString() ?: System.getenv("SIGNING_PASSWORD") 
     val secretKey = project.findProperty("signing.secretKey")?.toString() ?: System.getenv("SIGNING_SECRET_KEY")
     
     if (!keyId.isNullOrBlank() && !password.isNullOrBlank() && !secretKey.isNullOrBlank()) {
-        signing {
-            useInMemoryPgpKeys(keyId, secretKey, password)
-            sign(publishing.publications["maven"])
-        }
+        useInMemoryPgpKeys(keyId, secretKey, password)
+        sign(publishing.publications["maven"])
     }
 }
 
@@ -236,14 +236,14 @@ tasks.register<Zip>("createCentralPortalBundle") {
         file("${System.getProperty("user.home")}/.m2/repository/${groupPath}/${artifactName}/${project.version}")
 
     from(repoPath) {
-        include("**/*.jar", "**/*.pom", "**/*.asc", "**/*.md5", "**/*.sha1")
+        include("**/*.jar", "**/*.pom", "**/*.module", "**/*.asc", "**/*.md5", "**/*.sha1")
         into("${groupPath}/${artifactName}/${project.version}")
     }
 
     doFirst {
         // Generate missing checksums and signatures
         val files = fileTree(repoPath) {
-            include("**/*.jar", "**/*.pom")
+            include("**/*.jar", "**/*.pom", "**/*.module")
             exclude("**/*.asc", "**/*.md5", "**/*.sha1")
         }
 
