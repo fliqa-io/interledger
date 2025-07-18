@@ -175,7 +175,7 @@ jobs:
 
 
       - name: Publish to Maven Central
-        run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -Prelease.version=${{ env.RELEASE_VERSION }}
+        run: ./gradlew publishMavenPublicationToCentralRepository -Prelease.version=${{ env.RELEASE_VERSION }}
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

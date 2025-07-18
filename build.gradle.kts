@@ -1,10 +1,7 @@
-import java.time.Duration
-
 plugins {
     id("java")
     id("maven-publish")
     id("signing")
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "io.fliqa"
@@ -119,26 +116,6 @@ dependencies {
     "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 }
 
-// Central Portal publishing configuration for Maven Central
-// Only configure if credentials are available
-if (System.getenv("SONATYPE_USERNAME") != null || project.findProperty("sonatypeUsername") != null) {
-    nexusPublishing {
-        repositories {
-            sonatype {
-                nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-                snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-                username.set(System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?)
-                password.set(System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?)
-            }
-        }
-
-        // Configure for OSSRH
-        transitionCheckOptions {
-            maxRetries.set(60)
-            delayBetween.set(Duration.ofSeconds(10))
-        }
-    }
-}
 
 publishing {
     repositories {
@@ -149,6 +126,16 @@ publishing {
             credentials {
                 username = project.findProperty("github.username") as String? ?: System.getenv("GITHUB_ACTOR")
                 password = project.findProperty("github.token") as String? ?: System.getenv("PACKAGES_TOKEN")
+            }
+        }
+        
+        // Central Portal repository for Maven Central
+        maven {
+            name = "Central"
+            url = uri("https://central.sonatype.com/api/v1/publisher/upload")
+            credentials {
+                username = System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?
+                password = System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?
             }
         }
     }
