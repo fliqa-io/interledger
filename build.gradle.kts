@@ -1,12 +1,14 @@
+import java.security.MessageDigest
+import java.util.*
+
 plugins {
     id("java")
     id("maven-publish")
     id("signing")
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "io.fliqa"
-version = "1.0.0-SNAPSHOT"
+version = "1.0.1"
 
 // Take version from parameter or set default
 val projectVersion = project.findProperty("release.version") as String? ?: version
@@ -129,7 +131,6 @@ publishing {
                 password = project.findProperty("github.token") as String? ?: System.getenv("PACKAGES_TOKEN")
             }
         }
-
     }
 
     publications {
@@ -177,27 +178,129 @@ publishing {
     }
 }
 
-// Nexus Publishing configuration for Central Portal
-nexusPublishing {
-    repositories {
-        sonatype {
-            // Central Portal tokens work with OSSRH endpoints for new namespaces
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?)
-            password.set(System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?)
+
+// Test task to check signing setup
+tasks.register("testSigning") {
+    doLast {
+        val keyId = project.findProperty("signing.keyId")?.toString() ?: System.getenv("SIGNING_KEY_ID")
+        val password = project.findProperty("signing.password")?.toString() ?: System.getenv("SIGNING_PASSWORD")
+        val secretKey = project.findProperty("signing.secretKey")?.toString() ?: System.getenv("SIGNING_SECRET_KEY")
+        
+        println("Testing signing configuration...")
+        println("KeyId length: ${keyId?.length ?: 0}")
+        println("Password length: ${password?.length ?: 0}")
+        println("SecretKey length: ${secretKey?.length ?: 0}")
+        
+        if (!keyId.isNullOrBlank() && !password.isNullOrBlank() && !secretKey.isNullOrBlank()) {
+            try {
+                // Try to decode the base64 secret key
+                val decodedKey = String(Base64.getDecoder().decode(secretKey))
+                println("Secret key decoding: SUCCESS")
+                println("Decoded key starts with: ${decodedKey.take(30)}...")
+            } catch (e: Exception) {
+                println("Secret key decoding: FAILED - ${e.message}")
+            }
+        } else {
+            println("Missing required properties")
         }
     }
 }
 
 // Signing configuration for Maven Central
-signing {
-    val signingKeyId = System.getenv("SIGNING_KEY_ID") ?: project.findProperty("signing.keyId") as String?
-    val signingPassword = System.getenv("SIGNING_PASSWORD") ?: project.findProperty("signing.password") as String?
-    val signingSecretKey = System.getenv("SIGNING_SECRET_KEY") ?: project.findProperty("signing.secretKey") as String?
+afterEvaluate {
+    val keyId = project.findProperty("signing.keyId")?.toString() ?: System.getenv("SIGNING_KEY_ID")
+    val password = project.findProperty("signing.password")?.toString() ?: System.getenv("SIGNING_PASSWORD") 
+    val secretKey = project.findProperty("signing.secretKey")?.toString() ?: System.getenv("SIGNING_SECRET_KEY")
+    
+    if (!keyId.isNullOrBlank() && !password.isNullOrBlank() && !secretKey.isNullOrBlank()) {
+        signing {
+            useInMemoryPgpKeys(keyId, secretKey, password)
+            sign(publishing.publications["maven"])
+        }
+    }
+}
 
-    if (signingKeyId != null && signingPassword != null && signingSecretKey != null) {
-        useInMemoryPgpKeys(signingKeyId, signingSecretKey, signingPassword)
-        sign(publishing.publications["maven"])
+// Task to create a bundle for Central Portal upload
+tasks.register<Zip>("createCentralPortalBundle") {
+    group = "publishing"
+    description = "Creates a bundle for Central Portal upload"
+
+    dependsOn("publishMavenPublicationToMavenLocal")
+
+    archiveBaseName.set("${project.group}.${artifactName}")
+    archiveVersion.set(project.version.toString())
+    archiveClassifier.set("bundle")
+
+    val groupPath = project.group.toString().replace('.', '/')
+    val repoPath =
+        file("${System.getProperty("user.home")}/.m2/repository/${groupPath}/${artifactName}/${project.version}")
+
+    from(repoPath) {
+        include("**/*.jar", "**/*.pom", "**/*.asc", "**/*.md5", "**/*.sha1")
+        into("${groupPath}/${artifactName}/${project.version}")
+    }
+
+    doFirst {
+        // Generate missing checksums and signatures
+        val files = fileTree(repoPath) {
+            include("**/*.jar", "**/*.pom")
+            exclude("**/*.asc", "**/*.md5", "**/*.sha1")
+        }
+
+        files.forEach { file ->
+            // Generate MD5 checksum
+            val md5File = File(file.parentFile, "${file.name}.md5")
+            if (!md5File.exists()) {
+                val md5 = file.readBytes().let { bytes ->
+                    MessageDigest.getInstance("MD5").digest(bytes).joinToString("") { byte ->
+                        "%02x".format(byte)
+                    }
+                }
+                md5File.writeText(md5)
+            }
+
+            // Generate SHA1 checksum
+            val sha1File = File(file.parentFile, "${file.name}.sha1")
+            if (!sha1File.exists()) {
+                val sha1 = file.readBytes().let { bytes ->
+                    MessageDigest.getInstance("SHA1").digest(bytes).joinToString("") { byte ->
+                        "%02x".format(byte)
+                    }
+                }
+                sha1File.writeText(sha1)
+            }
+        }
+    }
+}
+
+// Task to upload bundle to Central Portal
+tasks.register("uploadToCentralPortal") {
+    group = "publishing"
+    description = "Uploads the bundle to Central Portal"
+
+    dependsOn("createCentralPortalBundle")
+
+    doLast {
+        val username = System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?
+        val password = System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?
+        val bundleFile =
+            layout.buildDirectory.file("distributions/${project.group}.${artifactName}-${project.version}-bundle.zip")
+                .get().asFile
+
+        if (username != null && password != null && bundleFile.exists()) {
+            // Central Portal uses basic auth with username:password base64 encoded
+            val credentials = Base64.getEncoder().encodeToString("${username}:${password}".toByteArray())
+
+            exec {
+                commandLine(
+                    "curl", "-X", "POST",
+                    "-H", "Authorization: Basic ${credentials}",
+                    "-F", "bundle=@${bundleFile.absolutePath}",
+                    "https://central.sonatype.com/api/v1/publisher/upload"
+                )
+            }
+        } else {
+            throw GradleException("Missing credentials or bundle file not found")
+        }
     }
 }
