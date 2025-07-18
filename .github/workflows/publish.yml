@@ -43,16 +43,16 @@ jobs:
           echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
           echo "Version for release: $RELEASE_VERSION"
 
-      - name: Publish to GitHub Packages
+      - name: Publish to GitHub Packages (Private)
         env:
           PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
-        run: ./gradlew publish -Prelease.version=${{ env.RELEASE_VERSION }}
+        run: ./gradlew publishMavenPublicationToPrivateRepository -Prelease.version=${{ env.RELEASE_VERSION }}
 
       - name: Create Git Tag
         if: ${{ github.event.inputs.tag == 'release'  }}  # Condition to only tag on 'release' versions
         run: |
           USER_EMAIL=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/users/${{ github.actor }}" | jq -r '.email')
+            "https://api.github.com/users/${{ github.actor }}" | jq -r '.email')The
 
           if [[ -z "$USER_EMAIL" || "$USER_EMAIL" == "null" ]]; then
             USER_EMAIL="${{ github.actor }}@users.noreply.github.com"

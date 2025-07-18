@@ -1,8 +1,10 @@
+import java.time.Duration
+
 plugins {
     id("java")
     id("maven-publish")
     id("signing")
-    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 group = "io.fliqa"
@@ -117,22 +119,33 @@ dependencies {
     "integrationTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 }
 
-// Nexus publishing configuration for Maven Central
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-            username.set(System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?)
-            password.set(System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?)
+// Central Portal publishing configuration for Maven Central
+// Only configure if credentials are available
+if (System.getenv("SONATYPE_USERNAME") != null || project.findProperty("sonatypeUsername") != null) {
+    nexusPublishing {
+        repositories {
+            sonatype {
+                nexusUrl.set(uri("https://central.sonatype.com/api/v1/publisher/"))
+                snapshotRepositoryUrl.set(uri("https://central.sonatype.com/api/v1/publisher/"))
+                username.set(System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?)
+                password.set(System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?)
+            }
+        }
+
+        // Configure for Central Portal
+        useStaging.set(false) // Central Portal doesn't use staging
+        transitionCheckOptions {
+            maxRetries.set(60)
+            delayBetween.set(Duration.ofSeconds(10))
         }
     }
 }
 
 publishing {
     repositories {
+        // Private internal repository for fliqa-io/packages
         maven {
-            name = "GitHubPackages"
+            name = "Private"
             url = uri("https://maven.pkg.github.com/fliqa-io/packages")
             credentials {
                 username = project.findProperty("github.username") as String? ?: System.getenv("GITHUB_ACTOR")
@@ -144,10 +157,10 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            
+
             // Set the artifact name explicitly  
             artifactId = artifactName
-            
+
             pom {
                 name.set("Interledger API Client")
                 description.set("Java client for Interledger Open Payments protocol")
