@@ -1,4 +1,4 @@
-name: Maven Central Pipeline
+name: Publish on Maven Central
 
 on:
   workflow_dispatch:

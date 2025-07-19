@@ -1,4 +1,4 @@
-name: Build Interledger API client
+name: Build API client
 
 on:
   workflow_dispatch:

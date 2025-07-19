@@ -1,4 +1,4 @@
-name: Publish Interledger API client
+name: Publish on Fliqa packages
 
 on:
   workflow_dispatch:
