@@ -8,14 +8,14 @@ plugins {
 }
 
 group = "io.fliqa"
-version = "1.0.1"
+version = "1.0.0-SNAPSHOT"
 
 // Take version from parameter or set default
 val projectVersion = project.findProperty("release.version") as String? ?: version
 version = projectVersion
 
 // Set a proper artifact name
-val artifactName = "interledger-client"
+val artifactName = "interledger"
 
 repositories {
     mavenCentral()
@@ -155,16 +155,16 @@ publishing {
 
                 developers {
                     developer {
-                        id.set("azavrsnik")
+                        id.set("drejc")
                         name.set("Andrej Završnik")
                         email.set("andrej@fliqa.io")
-                        organization.set("Fliqa")
+                        organization.set("Fliqa d.o.o.")
                         organizationUrl.set("https://fliqa.io")
                     }
                 }
 
                 organization {
-                    name.set("Fliqa")
+                    name.set("Fliqa d.o.o.")
                     url.set("https://fliqa.io")
                 }
 
@@ -185,12 +185,14 @@ tasks.register("testSigning") {
         val keyId = project.findProperty("signing.keyId")?.toString() ?: System.getenv("SIGNING_KEY_ID")
         val password = project.findProperty("signing.password")?.toString() ?: System.getenv("SIGNING_PASSWORD")
         val secretKey = project.findProperty("signing.secretKey")?.toString() ?: System.getenv("SIGNING_SECRET_KEY")
-        
+
+        /*
         println("Testing signing configuration...")
         println("KeyId length: ${keyId?.length ?: 0}")
         println("Password length: ${password?.length ?: 0}")
         println("SecretKey length: ${secretKey?.length ?: 0}")
-        
+        */
+
         if (!keyId.isNullOrBlank() && !password.isNullOrBlank() && !secretKey.isNullOrBlank()) {
             try {
                 // Try to decode the base64 secret key
@@ -209,11 +211,11 @@ tasks.register("testSigning") {
 // Signing configuration for Maven Central
 signing {
     isRequired = false // Optional signing - won't fail if credentials missing
-    
+
     val keyId = project.findProperty("signing.keyId")?.toString() ?: System.getenv("SIGNING_KEY_ID")
-    val password = project.findProperty("signing.password")?.toString() ?: System.getenv("SIGNING_PASSWORD") 
+    val password = project.findProperty("signing.password")?.toString() ?: System.getenv("SIGNING_PASSWORD")
     val secretKey = project.findProperty("signing.secretKey")?.toString() ?: System.getenv("SIGNING_SECRET_KEY")
-    
+
     if (!keyId.isNullOrBlank() && !password.isNullOrBlank() && !secretKey.isNullOrBlank()) {
         useInMemoryPgpKeys(keyId, secretKey, password)
         sign(publishing.publications["maven"])
