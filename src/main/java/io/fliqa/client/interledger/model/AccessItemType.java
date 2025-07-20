@@ -17,6 +17,7 @@ package io.fliqa.client.interledger.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.fliqa.client.interledger.utils.Assert;
 
 /**
  * Enumeration of resource types available for Interledger Open Payments access control.
@@ -85,6 +86,7 @@ public enum AccessItemType {
      * @param name the string representation of the resource type
      */
     AccessItemType(String name) {
+        Assert.notNull(name, "name cannot be null.");
         this.value = name;
     }
 

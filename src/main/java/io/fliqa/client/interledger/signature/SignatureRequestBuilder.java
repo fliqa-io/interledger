@@ -487,7 +487,7 @@ public class SignatureRequestBuilder {
     }
 
     private void checkMethod() {
-        Assert.isFalse(parameters.get(METHOD) == null, String.format("Method '%s' already set!", parameters.get(METHOD)));
+        Assert.isTrue(parameters.get(METHOD) == null, String.format("Method '%s' already set!", parameters.get(METHOD)));
     }
 
     /**

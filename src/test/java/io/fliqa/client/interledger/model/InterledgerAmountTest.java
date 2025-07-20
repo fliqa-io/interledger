@@ -49,7 +49,7 @@ class InterledgerAmountTest {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 InterledgerAmount.build(null, "EUR"));
 
-        assertEquals("amount cannot be null or empty.", exception.getMessage());
+        assertEquals("amount cannot be null.", exception.getMessage());
 
         exception = assertThrows(IllegalArgumentException.class, () ->
                 InterledgerAmount.build(BigDecimal.valueOf(1.23), null)

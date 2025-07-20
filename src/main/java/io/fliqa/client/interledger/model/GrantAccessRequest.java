@@ -17,6 +17,7 @@ package io.fliqa.client.interledger.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fliqa.client.interledger.utils.Assert;
 
 import java.net.URI;
 import java.util.LinkedHashSet;
@@ -26,13 +27,13 @@ import java.util.Set;
 
 /**
  * Represents a request to grant access to resources using the GNAP protocol.
- * 
+ *
  * <p>This class is used to initiate an access request to the authorization server
  * in the Grant Negotiation and Authorization Protocol (GNAP). It contains the
  * client identifier, the access token request specifying what permissions are
  * being requested, and optionally the interaction methods for obtaining user
  * consent.
- * 
+ *
  * <p>The grant access request is typically the first step in the GNAP flow where
  * the client requests permission to access protected resources on behalf of a
  * resource owner. The request includes:
@@ -41,7 +42,7 @@ import java.util.Set;
  *   <li>Access token request with desired permissions</li>
  *   <li>Optional interaction methods for user consent</li>
  * </ul>
- * 
+ *
  * <p>Example usage:
  * <pre>
  * GrantAccessRequest request = GrantAccessRequest.outgoing(
@@ -53,24 +54,24 @@ import java.util.Set;
  * );
  * request.redirectInteract(returnUrl, nonce);
  * </pre>
- * 
+ *
  * @author Fliqa
  * @version 1.0
- * @since 1.0
  * @see AccessToken
  * @see AccessInteract
  * @see WalletAddress
  * @see AccessGrant
+ * @since 1.0
  */
 public class GrantAccessRequest {
 
     /**
      * The client identifier for this access request.
-     * 
+     *
      * <p>This identifies the client application that is requesting access
      * to protected resources. In the context of Interledger Open Payments,
      * this is typically the wallet address of the client application.
-     * 
+     *
      * @see WalletAddress
      */
     @JsonProperty("client")
@@ -78,11 +79,11 @@ public class GrantAccessRequest {
 
     /**
      * The access token request specifying what permissions are being requested.
-     * 
+     *
      * <p>This field contains the detailed specification of what access the
      * client is requesting. It includes the types of resources, the actions
      * that can be performed, and any limits or constraints on the access.
-     * 
+     *
      * @see AccessToken
      */
     @JsonProperty("access_token")
@@ -90,12 +91,12 @@ public class GrantAccessRequest {
 
     /**
      * Optional interaction methods for obtaining user consent.
-     * 
+     *
      * <p>This field specifies how the client can interact with the authorization
      * server to obtain consent from the resource owner. If not present, the
      * authorization server may use its default interaction methods or deny
      * the request if interaction is required.
-     * 
+     *
      * @see AccessInteract
      */
     @JsonProperty("interact")
@@ -106,17 +107,18 @@ public class GrantAccessRequest {
 
     /**
      * Constructs a new grant access request for the specified client.
-     * 
-     * @param client the client wallet address making the access request
+     *
+     * @param clientWalletAddress the client wallet address making the access request
      * @throws IllegalArgumentException if client is null
      */
-    public GrantAccessRequest(WalletAddress client) {
-        this.client = client;
+    public GrantAccessRequest(WalletAddress clientWalletAddress) {
+        Assert.notNull(clientWalletAddress, "clientWalletAddress cannot be null.");
+        this.client = clientWalletAddress;
     }
 
     /**
      * Helper method to quickly assemble a basic access request.
-     * 
+     *
      * <p>This method creates a grant access request with the specified client
      * wallet address, access type, and actions. It automatically creates the
      * necessary access token and access item structures.
@@ -129,6 +131,11 @@ public class GrantAccessRequest {
     public static GrantAccessRequest build(WalletAddress clientWallet,
                                            AccessItemType accessType,
                                            Set<AccessAction> accessActions) {
+
+        Assert.notNull(clientWallet, "clientWallet cannot be null.");
+        Assert.notNull(accessType, "accessType cannot be null.");
+        Assert.notNullOrEmpty(accessActions, "accessActions cannot be null or empty.");
+
         GrantAccessRequest request = new GrantAccessRequest(clientWallet);
         request.accessToken = new AccessToken();
 
@@ -144,17 +151,17 @@ public class GrantAccessRequest {
 
     /**
      * Creates a grant access request for outgoing payment operations.
-     * 
+     *
      * <p>This method creates a specialized access request for outgoing payments,
      * including the specific identifier and debit amount limits. It's commonly
      * used when requesting permission to create outgoing payments with specific
      * constraints.
-     * 
-     * @param clientWallet the client wallet address making the request
-     * @param accessType the type of access being requested (typically outgoingPayment)
+     *
+     * @param clientWallet  the client wallet address making the request
+     * @param accessType    the type of access being requested (typically outgoingPayment)
      * @param accessActions the set of actions to be performed (typically create)
-     * @param identifier the URI identifier for the specific resource (e.g., quote ID)
-     * @param debitAmount the maximum amount that can be debited
+     * @param identifier    the URI identifier for the specific resource (e.g., quote ID)
+     * @param debitAmount   the maximum amount that can be debited
      * @return a new GrantAccessRequest configured for outgoing payments
      */
     public static GrantAccessRequest outgoing(WalletAddress clientWallet,
@@ -173,20 +180,23 @@ public class GrantAccessRequest {
 
     /**
      * Configures this request to use redirect-based interaction.
-     * 
+     *
      * <p>This method sets up the request to use browser-based redirect interaction
      * for obtaining user consent. The authorization server will redirect the user
      * to the specified return URL after the interaction is complete.
-     * 
+     *
      * @param returnUrl the URL to return to when interaction is finished, or null to omit
-     * @param nonce a unique value to prevent replay attacks during the interaction
+     * @param nonce     a unique value to prevent replay attacks during the interaction
      * @return this GrantAccessRequest instance for method chaining
      */
     public GrantAccessRequest redirectInteract(URI returnUrl, String nonce) {
+
         interact = new AccessInteract();
         interact.start = List.of(REDIRECT);
 
         if (returnUrl != null) {
+            Assert.notNullOrEmpty(nonce, "nonce cannot be null or empty.");
+
             interact.finish = new InteractFinish();
             interact.finish.method = REDIRECT;
             interact.finish.uri = returnUrl;

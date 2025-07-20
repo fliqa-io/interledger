@@ -124,6 +124,12 @@ public final class Assert {
         }
     }
 
+    public static <T> void notNullOrEmpty(Set<T> value, String message) {
+        if (value == null || value.isEmpty()) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
     public static <E extends Throwable> void notNullOrEmpty(
             String value,
             Supplier<E> exceptionSupplier) throws E {

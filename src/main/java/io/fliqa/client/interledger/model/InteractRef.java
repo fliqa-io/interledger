@@ -16,6 +16,7 @@
 package io.fliqa.client.interledger.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fliqa.client.interledger.utils.Assert;
 
 /**
  * Represents an interaction reference for the GNAP protocol.
@@ -73,6 +74,7 @@ public class InteractRef {
      * @throws IllegalArgumentException if interactRef is null or empty
      */
     public static InteractRef build(String interactRef) {
+        Assert.notNullOrEmpty(interactRef, "interactRef cannot be null or empty.");
         InteractRef ref = new InteractRef();
         ref.interactRef = interactRef;
         return ref;

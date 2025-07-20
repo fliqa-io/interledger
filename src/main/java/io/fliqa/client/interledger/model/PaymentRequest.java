@@ -17,11 +17,11 @@ package io.fliqa.client.interledger.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fliqa.client.interledger.utils.Assert;
 
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Instant;
-import java.util.HashSet;
 
 public class PaymentRequest {
 
@@ -41,16 +41,14 @@ public class PaymentRequest {
 
     public static PaymentRequest build(PaymentPointer receiver, BigDecimal amount, int expiresInSeconds) {
 
-        if (receiver == null) {
-            throw new NullPointerException("Missing receiver address.");
-        }
+        Assert.notNull(receiver, "receiver cannot be null.");
 
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero.");
+            throw new IllegalArgumentException("amount must be greater than zero.");
         }
 
         if (expiresInSeconds <= 0) {
-            throw new IllegalArgumentException("expiresInSeconds must be greater than 0.");
+            throw new IllegalArgumentException("expiresInSeconds must be greater than zero.");
         }
 
         PaymentRequest request = new PaymentRequest();
@@ -58,20 +56,6 @@ public class PaymentRequest {
         request.incomingAmount = InterledgerAmount.build(amount, receiver.assetCode, receiver.assetScale);
 
         request.expiresAt = Instant.now().plusSeconds(expiresInSeconds);
-
-        // TODO: testing remove later
-        MetaData meta = new MetaData();
-        meta.externalId = "external_reference_id";
-        meta.value = new HashSet<>();
-
-        MetaDataItem item = new MetaDataItem();
-        item.key = "key";
-        item.value = "value";
-        meta.value.add(item);
-
-        request.metadata = meta;
-        // TODO: end
-
         return request;
     }
 }

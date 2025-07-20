@@ -16,6 +16,7 @@
 package io.fliqa.client.interledger.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fliqa.client.interledger.utils.Assert;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -23,22 +24,22 @@ import java.text.DecimalFormat;
 
 /**
  * Represents a monetary amount in the Interledger Protocol format.
- * 
+ *
  * <p>This class encapsulates the three components required for representing monetary
  * amounts in the Interledger network: the asset code (currency), the asset scale
  * (precision), and the amount value (as an unsigned 64-bit integer string).
- * 
+ *
  * <p>The Interledger Protocol uses a specific format for amounts to ensure precision
  * and consistency across different systems and currencies. Amounts are represented
  * as scaled integers to avoid floating-point precision issues.
- * 
+ *
  * <p>Example: $12.34 USD would be represented as:
  * <ul>
  *   <li>assetCode: "USD"</li>
  *   <li>assetScale: 2</li>
  *   <li>amount: "1234" (12.34 * 10^2)</li>
  * </ul>
- * 
+ *
  * @author Fliqa
  * @version 1.0
  * @since 1.0
@@ -47,7 +48,7 @@ public class InterledgerAmount {
 
     /**
      * The default scale for monetary amounts (2 decimal places).
-     * 
+     *
      * <p>This is the most common scale used for traditional currencies,
      * representing cents, pence, or similar subunits.
      */
@@ -55,11 +56,11 @@ public class InterledgerAmount {
 
     /**
      * The asset code indicating the underlying asset.
-     * 
+     *
      * <p>This should be an ISO4217 currency code such as "USD", "EUR", "GBP", etc.
      * The asset code identifies the type of value being represented and must be
      * exactly 3 characters long.
-     * 
+     *
      * @see <a href="https://www.iso.org/iso-4217-currency-codes.html">ISO4217 Currency Codes</a>
      */
     @JsonProperty(value = "assetCode", required = true)
@@ -67,11 +68,11 @@ public class InterledgerAmount {
 
     /**
      * The scale of amounts denoted in the corresponding asset code.
-     * 
+     *
      * <p>This represents the number of decimal places in the amount. For example,
      * a scale of 2 means the amount is expressed in hundredths (cents for USD).
      * The scale must be between 0 and 255.
-     * 
+     *
      * <p>Common scales:
      * <ul>
      *   <li>0 - Whole units (e.g., Japanese Yen)</li>
@@ -84,11 +85,11 @@ public class InterledgerAmount {
 
     /**
      * The value as an unsigned 64-bit integer amount, represented as a string.
-     * 
+     *
      * <p>This is the actual amount value scaled by the asset scale. For example,
      * if the human-readable amount is $12.34 and the scale is 2, this value
      * would be "1234" (12.34 * 10^2).
-     * 
+     *
      * <p>The value is stored as a string to avoid precision issues and to support
      * the full range of 64-bit unsigned integers.
      */
@@ -97,10 +98,10 @@ public class InterledgerAmount {
 
     /**
      * Converts this InterledgerAmount to a BigDecimal representation.
-     * 
+     *
      * <p>This method converts the scaled integer amount back to a decimal
      * representation by moving the decimal point left by the asset scale.
-     * 
+     *
      * @return a BigDecimal representing the human-readable amount
      */
     public BigDecimal asBigDecimal() {
@@ -130,12 +131,11 @@ public class InterledgerAmount {
      */
     public static InterledgerAmount build(BigDecimal amount, String assetCode, int scale) {
 
-        if (amount == null) {
-            throw new IllegalArgumentException("amount cannot be null or empty.");
+        Assert.notNull(amount, "amount cannot be null.");
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("amount must be greater than zero.");
         }
-        if (assetCode == null || assetCode.isBlank()) {
-            throw new IllegalArgumentException("assetCode cannot be null or empty.");
-        }
+        Assert.notNullOrEmpty(assetCode, "assetCode cannot be null or empty.");
         if (assetCode.length() != 3) {
             throw new IllegalArgumentException(String.format("assetCode must be 3 characters long / ISO4217 currency code, but was: '%s'.", assetCode));
         }
@@ -149,17 +149,20 @@ public class InterledgerAmount {
 
     /**
      * Converts a BigDecimal amount to an Interledger amount string representation.
-     * 
+     *
      * <p>This method scales the decimal amount by the specified scale and converts
      * it to a string representation suitable for Interledger protocol usage.
      * The amount is first rounded to 2 decimal places, then scaled by the power
      * of 10 corresponding to the amount scale.
-     * 
-     * @param amount the BigDecimal amount to convert
+     *
+     * @param amount      the BigDecimal amount to convert
      * @param amountScale the scale to apply (number of decimal places)
      * @return the string representation of the scaled amount
      */
     public static String toInterledgerAmount(BigDecimal amount, int amountScale) {
+        Assert.notNull(amount, "amount cannot be null.");
+        Assert.isTrue(amountScale >= 0, "amountScale must be greater than or equal to zero.");
+
         BigDecimal out = amount.setScale(2, RoundingMode.HALF_UP).scaleByPowerOfTen(amountScale);
 
         DecimalFormat decimalFormat = new DecimalFormat("#");
@@ -168,10 +171,10 @@ public class InterledgerAmount {
 
     /**
      * Converts a BigDecimal amount to an Interledger amount string using the default scale.
-     * 
+     *
      * <p>This is a convenience method that uses the {@link #DEFAULT_AMOUNT_SCALE}
      * to convert the amount.
-     * 
+     *
      * @param amount the BigDecimal amount to convert
      * @return the string representation of the scaled amount
      */

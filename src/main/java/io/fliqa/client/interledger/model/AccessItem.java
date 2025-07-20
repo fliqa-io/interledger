@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.fliqa.client.interledger.serializer.OrderedSetSerializer;
+import io.fliqa.client.interledger.utils.Assert;
 
 import java.net.URI;
 import java.util.Set;
@@ -105,6 +106,8 @@ public class AccessItem {
      * @return this AccessItem instance for method chaining
      */
     public AccessItem accessOutgoing(URI identifier, InterledgerAmount debitAmount) {
+        Assert.notNull(identifier, "identifier cannot be null.");
+        Assert.notNull(debitAmount, "debitAmount cannot be null.");
         this.identifier = identifier;
         limits = new Limits();
         limits.debitAmount = debitAmount;
