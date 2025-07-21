@@ -505,7 +505,7 @@ public class SignatureRequestBuilder {
         while (iterator.hasNext()) {
             Map.Entry<String, Object> entry = iterator.next();
             signatureBase.append("\"")
-                    .append(entry.getKey().toLowerCase())   // headers nee to be lower case
+                    .append(entry.getKey().toLowerCase())   // headers need to be lower case
                     .append("\": ")
                     .append(entry.getValue());
 
