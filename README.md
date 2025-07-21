@@ -45,15 +45,15 @@ Add the following dependency to your project:
 
 <dependency>
     <groupId>io.fliqa</groupId>
-    <artifactId>interledger-client</artifactId>
-    <version>1.0.0</version>
+    <artifactId>interledger</artifactId>
+    <version>1.0.1</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```kotlin
-implementation("io.fliqa:interledger-client:1.0.0")
+implementation("io.fliqa:interledger:1.0.1")
 ```
 
 ### Basic Usage
