@@ -7,6 +7,7 @@ on:
         description: "Docker tag (release or snapshot publish)"
         required: true
         type: choice
+        default: snapshot
         options:
           - release
           - snapshot
