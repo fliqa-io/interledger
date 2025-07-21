@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.fliqa"
-version = "1.0.0-SNAPSHOT"
+version = "1.0.1-SNAPSHOT"
 
 // Take version from parameter or set default
 val projectVersion = project.findProperty("release.version") as String? ?: version
