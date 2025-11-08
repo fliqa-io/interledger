@@ -346,11 +346,18 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
      * @return the constructed URI
      * @throws IllegalArgumentException if baseUri or path is null
      */
-    private URI buildResourceUrl(URI baseUri, String path) {
+    protected URI buildResourceUrl(URI baseUri, String path) {
         Assert.notNull(baseUri, "Base URI cannot be null");
         Assert.notNull(path, "Path cannot be null");
+        
+        String rootPath = baseUri.toString();
+        if (rootPath.endsWith("/")) {
+            rootPath = rootPath.substring(0, rootPath.length() - 1);
+        }
+
         String normalizedPath = path.startsWith("/") ? path : "/" + path;
-        return baseUri.resolve(normalizedPath);
+
+        return URI.create(rootPath + normalizedPath);
     }
 
     /**
