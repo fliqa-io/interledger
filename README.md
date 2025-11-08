@@ -46,14 +46,14 @@ Add the following dependency to your project:
 <dependency>
     <groupId>io.fliqa</groupId>
     <artifactId>interledger</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```kotlin
-implementation("io.fliqa:interledger:1.0.1")
+implementation("io.fliqa:interledger:1.0.2")
 ```
 
 ### Basic Usage
