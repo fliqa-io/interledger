@@ -65,7 +65,7 @@ class InterledgerApiClientImplIT {
         Assertions.assertEquals("EUR", wallet.assetCode);
         Assertions.assertEquals(2, wallet.assetScale);
         Assertions.assertEquals(URI.create("https://auth.interledger-test.dev/f537937b-7016-481b-b655-9f0d1014822c"), wallet.authServer);
-        Assertions.assertEquals(URI.create("https://ilp.interledger-test.dev"), wallet.resourceServer);
+        Assertions.assertEquals(URI.create("https://ilp.interledger-test.dev/f537937b-7016-481b-b655-9f0d1014822c"), wallet.resourceServer);
     }
 
     // Get receiver wallet data
