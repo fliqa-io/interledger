@@ -180,7 +180,7 @@ sharing feedback, your contributions help make this project better for everyone.
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/interledger.git
+   git clone https://github.com/fliqa-io/interledger
    cd interledger
    ```
 
@@ -305,7 +305,7 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 
 ## Roadmap
 
-### Current Version (1.0.x)
+### Current Version (1.0.2)
 
 - ✅ Core Interledger Open Payments implementation for Fliqa specific use cases
 

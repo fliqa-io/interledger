@@ -44,11 +44,11 @@ class InterledgerApiClientImplIT {
     @BeforeEach
     public void setUp() throws Exception {
         PrivateKey privateKey = TestHelper.getPrivateKey();
-        WalletAddress clientWallet = new WalletAddress(TestHelper.getClientWalletAddress());
+        WalletAddress initiatorWalletAddress = new WalletAddress(TestHelper.getClientWalletAddress());
 
         InterledgerClientOptions options = new InterledgerClientOptions(20, 20, 120);
 
-        client = new InterledgerApiClientImpl(clientWallet,
+        client = new InterledgerApiClientImpl(initiatorWalletAddress,
                 privateKey,
                 TestHelper.getClientKeyId(),
                 options);
