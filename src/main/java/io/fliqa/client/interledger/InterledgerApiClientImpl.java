@@ -295,6 +295,23 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     }
 
     @Override
+    public AccessGrant rotateToken(AccessGrant grant) throws InterledgerClientException {
+        Assert.notNull(grant, "AccessGrant cannot be null");
+        Assert.notNull(grant.access, "AccessGrant.access cannot be null");
+        Assert.notNull(grant.access.manage, "AccessGrant.access.manage cannot be null");
+        Assert.notNull(grant.access.token, "AccessGrant.access.token cannot be null");
+        LOGGER.debug("rotateToken: {}", grant.access.manage);
+
+        HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
+                .POST() // no body - the token being rotated is identified by its own manage URI
+                .target(grant.access.manage)
+                .accessToken(grant.access.token)
+                .getRequest(options);
+
+        return send(request, AccessGrant.class);
+    }
+
+    @Override
     public Payment finalizePayment(AccessGrant finalizedGrant, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException {
         Assert.notNull(finalizedGrant, "AccessGrant finalizedGrant cannot be null");
         Assert.notNull(senderWallet, "PaymentPointer senderWallet cannot be null");

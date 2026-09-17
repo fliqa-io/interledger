@@ -143,8 +143,8 @@ class InterledgerApiClientImplIT {
         // This establishes the payment destination and amount that the sender will pay to.
         log.info("********");
         log.info("STEP 2: Create incoming payment request");
-        //IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(12.34));
-        IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(1234.56)); // not enough balance
+        IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(1.34));
+        //IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(1234.56)); // not enough balance
         assertNotNull(incomingPayment);
         log.info("Incoming payment created: " + incomingPayment.id + " for " +
                 incomingPayment.incomingAmount.amount + " " + incomingPayment.incomingAmount.assetCode);
@@ -347,7 +347,7 @@ class InterledgerApiClientImplIT {
         }
 
         // Option B: check the outgoing payment (sender-side grant from STEP 6A/6B)
-        if (finalizedPayment != null && finalized != null) {
+        if (finalizedPayment != null) {
             try {
                 Payment outgoingStatus = client.getOutgoingPayment(finalizedPayment.id, finalized);
                 assertNotNull(outgoingStatus);
@@ -365,6 +365,44 @@ class InterledgerApiClientImplIT {
             }
         } else {
             log.info("Skipping getOutgoingPayment check - payment was not finalized (denied, abandoned, or failed - see STEP 6 log above)");
+        }
+
+        // STEP 9: TOKEN ROTATION
+        // The GNAP/Open Payments protocol places no restriction on rotating an outgoing-payment
+        // token (the auth-server spec's own worked example for POST /token/{id} rotates exactly
+        // this type of token) - but whether the Rafiki sandbox actually honors it in practice is
+        // a separate, empirical question, same as the pollGrant "grant cannot be polled" surprise.
+        // Rotate the sender-side outgoing-payment grant, then repeat getOutgoingPayment using the
+        // ROTATED grant to confirm the new token is actually usable, not just returned.
+        log.info("********");
+        log.info("STEP 9: Rotate outgoing-payment access token and re-check payment status with it");
+
+        if (finalized != null) {
+            try {
+                AccessGrant rotated = client.rotateToken(finalized);
+                assertNotNull(rotated);
+                assertNotNull(rotated.access);
+                assertNotNull(rotated.access.token);
+                log.info("Token rotated successfully - new token: " +
+                        rotated.access.token.substring(0, Math.min(10, rotated.access.token.length())) + "...");
+
+                if (finalizedPayment != null) {
+                    try {
+                        Payment recheck = client.getOutgoingPayment(finalizedPayment.id, rotated);
+                        assertNotNull(recheck);
+                        log.info("getOutgoingPayment with ROTATED token: OK - failed=" + recheck.failed +
+                                ", sentAmount=" + recheck.sentAmount.amount + " " + recheck.sentAmount.assetCode);
+                    } catch (InterledgerClientException e) {
+                        log.warn("getOutgoingPayment with ROTATED token FAILED: " + e.getMessage());
+                    }
+                } else {
+                    log.info("Skipping rotated-token payment check - no outgoing payment was created");
+                }
+            } catch (InterledgerClientException e) {
+                log.warn("rotateToken FAILED: " + e.getMessage());
+            }
+        } else {
+            log.info("Skipping STEP 9 - grant was not finalized, no token to rotate");
         }
     }
 

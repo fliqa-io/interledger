@@ -280,4 +280,23 @@ public interface InterledgerApiClient {
      * @see AccessContinue
      */
     AccessGrant pollGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException;
+
+    /**
+     * Rotates (renews) an access token before it expires.
+     *
+     * <p>Every access token issued by the authorization server (for incoming-payment, quote,
+     * and outgoing-payment grants alike) carries a limited lifetime via {@link AccessToken#expiresIn}.
+     * Per GNAP, {@code POST /token/{id}} - the token's own {@link AccessToken#manage} URI -
+     * issues a fresh access token in its place, extending usable access without repeating the
+     * interactive grant flow. The request authenticates using the token being rotated itself,
+     * carries no body, and the rotated token type is not restricted by the protocol - the
+     * auth-server spec's own worked example for this endpoint rotates an outgoing-payment token.
+     *
+     * @param grant the access grant whose token should be rotated
+     * @return a new access grant containing the rotated (renewed) access token
+     * @throws InterledgerClientException if the token cannot be rotated (e.g. already expired or revoked)
+     * @see AccessToken#manage
+     * @see AccessToken#expiresIn
+     */
+    AccessGrant rotateToken(AccessGrant grant) throws InterledgerClientException;
 }
