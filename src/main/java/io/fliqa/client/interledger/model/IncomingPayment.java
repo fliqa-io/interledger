@@ -41,6 +41,12 @@ import java.util.Set;
 public class IncomingPayment {
 
     /**
+     * Creates a new, empty {@code IncomingPayment} instance.
+     */
+    public IncomingPayment() {
+    }
+
+    /**
      * Unique identifier for this incoming payment.
      * 
      * <p>This URI uniquely identifies the incoming payment resource and is used

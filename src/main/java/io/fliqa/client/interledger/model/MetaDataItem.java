@@ -41,6 +41,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class MetaDataItem {
 
     /**
+     * Creates a new, empty {@code MetaDataItem} instance.
+     */
+    public MetaDataItem() {
+    }
+
+    /**
      * The metadata key identifier.
      * 
      * <p>This is a required field that identifies the type or category of metadata.

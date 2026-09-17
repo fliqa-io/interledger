@@ -42,6 +42,12 @@ import java.io.IOException;
  */
 public class WalletAddressSerializer extends JsonSerializer<WalletAddress> {
 
+    /**
+     * Creates a new {@code WalletAddressSerializer} instance.
+     */
+    public WalletAddressSerializer() {
+    }
+
     @Override
     public void serialize(WalletAddress address, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeString(address.paymentPointer.toString());

@@ -61,6 +61,14 @@ public final class Assert {
         }
     }
 
+    /**
+     * Asserts that a boolean condition is true, throwing a custom exception otherwise.
+     *
+     * @param value             the boolean condition to check
+     * @param exceptionSupplier supplies the exception to throw if the condition is false
+     * @param <E>               the type of exception to throw
+     * @throws E if the condition is false
+     */
     public static <E extends Throwable> void isTrue(
             boolean value,
             Supplier<E> exceptionSupplier) throws E {
@@ -82,6 +90,14 @@ public final class Assert {
         }
     }
 
+    /**
+     * Asserts that a boolean condition is false, throwing a custom exception otherwise.
+     *
+     * @param value             the boolean condition to check
+     * @param exceptionSupplier supplies the exception to throw if the condition is true
+     * @param <E>               the type of exception to throw
+     * @throws E if the condition is true
+     */
     public static <E extends Throwable> void isFalse(
             boolean value,
             Supplier<E> exceptionSupplier) throws E {
@@ -103,6 +119,14 @@ public final class Assert {
         }
     }
 
+    /**
+     * Asserts that an object is not null, throwing a custom exception otherwise.
+     *
+     * @param value             the object to check
+     * @param exceptionSupplier supplies the exception to throw if the object is null
+     * @param <E>               the type of exception to throw
+     * @throws E if the object is null
+     */
     public static <E extends Throwable> void notNull(
             Object value,
             Supplier<E> exceptionSupplier) throws E {
@@ -124,12 +148,28 @@ public final class Assert {
         }
     }
 
+    /**
+     * Asserts that a set is not null and not empty.
+     *
+     * @param value   the set to check
+     * @param message the error message if the set is null or empty
+     * @param <T>     the type of elements in the set
+     * @throws IllegalArgumentException if the set is null or empty
+     */
     public static <T> void notNullOrEmpty(Set<T> value, String message) {
         if (value == null || value.isEmpty()) {
             throw new IllegalArgumentException(message);
         }
     }
 
+    /**
+     * Asserts that a string is not null and not blank, throwing a custom exception otherwise.
+     *
+     * @param value             the string to check
+     * @param exceptionSupplier supplies the exception to throw if the string is null or blank
+     * @param <E>               the type of exception to throw
+     * @throws E if the string is null or blank
+     */
     public static <E extends Throwable> void notNullOrEmpty(
             String value,
             Supplier<E> exceptionSupplier) throws E {
@@ -138,12 +178,30 @@ public final class Assert {
         }
     }
 
+    /**
+     * Asserts that a map is not null and not empty.
+     *
+     * @param value   the map to check
+     * @param message the error message if the map is null or empty
+     * @param <K>     the type of keys in the map
+     * @param <V>     the type of values in the map
+     * @throws IllegalArgumentException if the map is null or empty
+     */
     public static <K, V> void notNullOrEmpty(Map<K, V> value, String message) {
         if (value == null || value.isEmpty()) {
             throw new IllegalArgumentException(message);
         }
     }
 
+    /**
+     * Asserts that a list is not null and not empty, throwing a custom exception otherwise.
+     *
+     * @param value             the list to check
+     * @param exceptionSupplier supplies the exception to throw if the list is null or empty
+     * @param <E>               the type of exception to throw
+     * @param <T>               the type of elements in the list
+     * @throws E if the list is null or empty
+     */
     public static <E extends Throwable, T> void notNullOrEmpty(
             List<T> value,
             Supplier<E> exceptionSupplier) throws E {
@@ -152,6 +210,15 @@ public final class Assert {
         }
     }
 
+    /**
+     * Asserts that a set is not null and not empty, throwing a custom exception otherwise.
+     *
+     * @param value             the set to check
+     * @param exceptionSupplier supplies the exception to throw if the set is null or empty
+     * @param <E>               the type of exception to throw
+     * @param <T>               the type of elements in the set
+     * @throws E if the set is null or empty
+     */
     public static <E extends Throwable, T> void notNullOrEmpty(
             Set<T> value,
             Supplier<E> exceptionSupplier) throws E {

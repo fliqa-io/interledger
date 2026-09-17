@@ -41,6 +41,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class AccessGrant {
 
     /**
+     * Creates a new, empty {@code AccessGrant} instance.
+     */
+    public AccessGrant() {
+    }
+
+    /**
      * The access token granted by the authorization server.
      * 
      * <p>This token contains the credentials that the client can use to

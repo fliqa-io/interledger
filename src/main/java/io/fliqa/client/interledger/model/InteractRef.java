@@ -45,6 +45,12 @@ import io.fliqa.client.interledger.utils.Assert;
 public class InteractRef {
 
     /**
+     * Creates a new, empty {@code InteractRef} instance.
+     */
+    public InteractRef() {
+    }
+
+    /**
      * The interaction reference token from the authorization server.
      * 
      * <p>This reference token is provided by the authorization server after

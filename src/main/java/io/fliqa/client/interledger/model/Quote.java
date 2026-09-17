@@ -45,6 +45,12 @@ import java.time.Instant;
 public class Quote {
 
     /**
+     * Creates a new, empty {@code Quote} instance.
+     */
+    public Quote() {
+    }
+
+    /**
      * Timestamp when this quote was created.
      *
      * <p>This indicates when the quote was generated and serves as the starting

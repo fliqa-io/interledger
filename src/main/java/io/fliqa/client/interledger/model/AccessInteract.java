@@ -45,6 +45,12 @@ import java.util.List;
 public class AccessInteract {
 
     /**
+     * Creates a new, empty {@code AccessInteract} instance.
+     */
+    public AccessInteract() {
+    }
+
+    /**
      * The interaction methods that the client supports.
      * 
      * <p>This list contains the interaction methods that the client is

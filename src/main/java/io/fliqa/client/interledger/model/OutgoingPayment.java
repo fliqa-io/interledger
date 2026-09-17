@@ -46,6 +46,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class OutgoingPayment {
 
     /**
+     * Creates a new, empty {@code OutgoingPayment} instance.
+     */
+    public OutgoingPayment() {
+    }
+
+    /**
      * The continuation information for the access grant process.
      * 
      * <p>This field contains the information needed to continue the access

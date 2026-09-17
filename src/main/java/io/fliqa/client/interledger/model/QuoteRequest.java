@@ -46,6 +46,12 @@ import java.net.URI;
 public class QuoteRequest {
 
     /**
+     * Creates a new, empty {@code QuoteRequest} instance.
+     */
+    public QuoteRequest() {
+    }
+
+    /**
      * The wallet address where the quote will be created.
      *
      * <p>This identifies the sender's wallet address that is requesting the

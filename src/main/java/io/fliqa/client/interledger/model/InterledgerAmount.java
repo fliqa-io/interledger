@@ -47,6 +47,12 @@ import java.text.DecimalFormat;
 public class InterledgerAmount {
 
     /**
+     * Creates a new, empty {@code InterledgerAmount} instance.
+     */
+    public InterledgerAmount() {
+    }
+
+    /**
      * The default scale for monetary amounts (2 decimal places).
      *
      * <p>This is the most common scale used for traditional currencies,

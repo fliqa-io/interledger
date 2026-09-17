@@ -48,6 +48,12 @@ import java.net.URI;
 public class InteractFinish {
 
     /**
+     * Creates a new, empty {@code InteractFinish} instance.
+     */
+    public InteractFinish() {
+    }
+
+    /**
      * The method to use for notifying the client of interaction completion.
      * 
      * <p>This field specifies how the authorization server should communicate

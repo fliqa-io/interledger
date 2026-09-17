@@ -48,6 +48,12 @@ import java.net.URI;
 public class PaymentPointer {
 
     /**
+     * Creates a new, empty {@code PaymentPointer} instance.
+     */
+    public PaymentPointer() {
+    }
+
+    /**
      * The unique identifier URL for this payment pointer.
      * This is the canonical address that can be used to reference this wallet.
      */

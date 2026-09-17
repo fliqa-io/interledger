@@ -142,6 +142,12 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
         this(clientWallet, privateKey, keyId, InterledgerClientOptions.DEFAULT);
     }
 
+    /**
+     * Creates an {@link HttpClient} configured with the connect timeout from the given options.
+     *
+     * @param options the client options providing the connect timeout
+     * @return a newly configured {@link HttpClient} instance
+     */
     protected static HttpClient createDefaultHttpClient(InterledgerClientOptions options) {
         return HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(options.connectTimeOutInSeconds))  // Connect timeout

@@ -23,8 +23,21 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * A custom serializer for {@link Instant} values that writes them using the
+ * ISO-8601 instant format (e.g. {@code 2023-01-01T00:00:00Z}).
+ *
+ * @see Instant
+ * @see JsonSerializer
+ */
 public class InstantSerializer extends JsonSerializer<Instant> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
+
+    /**
+     * Creates a new {@code InstantSerializer} instance.
+     */
+    public InstantSerializer() {
+    }
 
     @Override
     public void serialize(Instant value, JsonGenerator gen, SerializerProvider serializers) throws IOException {

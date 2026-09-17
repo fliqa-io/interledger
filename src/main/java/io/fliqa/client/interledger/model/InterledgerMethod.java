@@ -38,6 +38,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class InterledgerMethod {
 
     /**
+     * Creates a new, empty {@code InterledgerMethod} instance.
+     */
+    public InterledgerMethod() {
+    }
+
+    /**
      * The type of payment method.
      * 
      * <p>For Interledger payments, this is always "ilp" indicating the

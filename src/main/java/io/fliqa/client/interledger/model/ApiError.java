@@ -50,6 +50,12 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 public class ApiError {
 
     /**
+     * Creates a new, empty {@code ApiError} instance.
+     */
+    public ApiError() {
+    }
+
+    /**
      * Human-readable error description.
      * 
      * <p>Provides a detailed explanation of what went wrong with the request.

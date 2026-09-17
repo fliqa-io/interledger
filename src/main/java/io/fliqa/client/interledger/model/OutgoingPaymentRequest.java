@@ -36,6 +36,12 @@ import java.net.URI;
 public class OutgoingPaymentRequest {
 
     /**
+     * Creates a new, empty {@code OutgoingPaymentRequest} instance.
+     */
+    public OutgoingPaymentRequest() {
+    }
+
+    /**
      * The wallet address from which the payment will be sent.
      */
     @JsonProperty(value = "walletAddress", required = true)

@@ -38,6 +38,12 @@ import java.util.Set;
 public class MetaData {
 
     /**
+     * Creates a new, empty {@code MetaData} instance.
+     */
+    public MetaData() {
+    }
+
+    /**
      * An external identifier for the payment.
      * 
      * <p>This field can be used to reference the payment in external systems

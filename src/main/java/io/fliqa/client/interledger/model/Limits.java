@@ -39,6 +39,12 @@ import java.net.URI;
 public class Limits {
 
     /**
+     * Creates a new, empty {@code Limits} instance.
+     */
+    public Limits() {
+    }
+
+    /**
      * The specific receiver (incoming payment) URI that this limit applies to.
      * 
      * <p>When specified, this limit restricts operations to only work with

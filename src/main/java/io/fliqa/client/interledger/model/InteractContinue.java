@@ -43,6 +43,12 @@ import java.net.URI;
 public class InteractContinue {
 
     /**
+     * Creates a new, empty {@code InteractContinue} instance.
+     */
+    public InteractContinue() {
+    }
+
+    /**
      * The interaction token provided by the authorization server.
      * 
      * <p>This token represents the completed user interaction and can be used

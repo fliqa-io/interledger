@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.fliqa"
-version = "1.0.2-SNAPSHOT"
+version = "1.0.3-SNAPSHOT"
 
 // Take version from parameter or set default
 val projectVersion = project.findProperty("release.version") as String? ?: version
@@ -29,7 +29,7 @@ java {
     withSourcesJar()
 }
 
-val jacksonVersion = "2.17.1"
+val jacksonVersion = "2.21.4"
 val junitVersion = "5.10.2"
 val loggerVersion = "2.0.17"
 val logbackClassicVersion = "1.5.17"
@@ -98,7 +98,7 @@ dependencies {
 
     // Serialization / Deserialization
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.21")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
     implementation("com.google.code.findbugs:jsr305:3.0.2")

@@ -45,6 +45,12 @@ import java.util.Set;
 public class AccessItem {
 
     /**
+     * Creates a new, empty {@code AccessItem} instance.
+     */
+    public AccessItem() {
+    }
+
+    /**
      * The type of resource this access item applies to.
      * 
      * <p>Specifies whether this access item grants permissions for incoming

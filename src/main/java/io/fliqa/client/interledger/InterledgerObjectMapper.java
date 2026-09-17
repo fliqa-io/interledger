@@ -93,7 +93,7 @@ public class InterledgerObjectMapper {
 
         // don't fail on unknown fields
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         return mapper;
     }
 
@@ -103,6 +103,13 @@ public class InterledgerObjectMapper {
         return mapper;
     }
 
+    /**
+     * Serializes the given value to its JSON string representation.
+     *
+     * @param value the value to serialize
+     * @return the JSON string representation of the value
+     * @throws InterledgerClientException if serialization fails
+     */
     public String writeValueAsString(Object value) throws InterledgerClientException {
         try {
             return mapper.writeValueAsString(value);
@@ -112,6 +119,15 @@ public class InterledgerObjectMapper {
         }
     }
 
+    /**
+     * Deserializes the given JSON content into an instance of the specified type.
+     *
+     * @param content   the JSON content to deserialize
+     * @param valueType the class of the target type
+     * @param <T>       the target type
+     * @return the deserialized instance
+     * @throws InterledgerClientException if deserialization fails
+     */
     public <T> T readValue(String content, Class<T> valueType) throws InterledgerClientException {
         try {
             return mapper.readValue(content, valueType);
@@ -122,6 +138,15 @@ public class InterledgerObjectMapper {
         }
     }
 
+    /**
+     * Deserializes an error response body into an {@link ApiError}, falling back to a generic
+     * error when the content is not valid JSON (some servers return plain-text errors).
+     *
+     * @param content          the error response body
+     * @param httpResponseCode the HTTP status code of the response
+     * @return the deserialized {@link ApiError}
+     * @throws InterledgerClientException if the content is a known non-JSON error or cannot be deserialized
+     */
     public ApiError readError(String content, int httpResponseCode) throws InterledgerClientException {
 
         // This is just a dumb way to mitigate the fact that not all errors are returned in JSON format

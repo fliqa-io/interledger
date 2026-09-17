@@ -42,6 +42,12 @@ import java.util.Set;
  */
 public class OrderedSetSerializer<T> extends JsonSerializer<Set<T>> {
 
+    /**
+     * Creates a new {@code OrderedSetSerializer} instance.
+     */
+    public OrderedSetSerializer() {
+    }
+
     @Override
     public void serialize(Set<T> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeStartArray();

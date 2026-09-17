@@ -52,6 +52,12 @@ import java.time.Instant;
 public class Payment {
 
     /**
+     * Creates a new, empty {@code Payment} instance.
+     */
+    public Payment() {
+    }
+
+    /**
      * Unique identifier for this payment.
      * 
      * <p>This URI uniquely identifies the payment transaction within the

@@ -41,6 +41,12 @@ import java.net.URI;
 public class AccessContinue {
 
     /**
+     * Creates a new, empty {@code AccessContinue} instance.
+     */
+    public AccessContinue() {
+    }
+
+    /**
      * The access token granted by the authorization server.
      * 
      * <p>This token contains the actual access credentials that the client

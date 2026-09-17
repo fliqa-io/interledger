@@ -61,6 +61,10 @@ import java.net.URI;
  */
 public interface InterledgerApiClient {
 
+    /**
+     * HTTP status code used when a request fails outside of the context of an HTTP response,
+     * such as during local serialization/deserialization errors.
+     */
     int INTERNAL_SERVER_ERROR = 500;
 
     /**

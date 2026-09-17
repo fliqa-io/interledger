@@ -23,22 +23,60 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Instant;
 
+/**
+ * Represents a request to create an incoming payment on a receiver's wallet.
+ *
+ * <p>This is the payload sent in step 2 of the payment flow to establish a payment
+ * destination with a specific expected amount and expiration.
+ *
+ * @author Fliqa
+ * @version 1.0
+ * @since 1.0
+ * @see IncomingPayment
+ */
 public class PaymentRequest {
 
+    /**
+     * Creates a new, empty {@code PaymentRequest} instance.
+     */
+    public PaymentRequest() {
+    }
+
+    /**
+     * The wallet address on which the incoming payment will be created.
+     */
     @JsonProperty(value = "walletAddress", required = true)
     public URI walletAddress;
 
+    /**
+     * The expected amount to be received for this payment.
+     */
     @JsonProperty(value = "incomingAmount", required = true)
     public InterledgerAmount incomingAmount;
 
+    /**
+     * The timestamp after which this incoming payment will no longer accept funds.
+     */
     @JsonProperty("expiresAt")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     Instant expiresAt;
 
+    /**
+     * Optional metadata associated with this payment.
+     */
     @JsonProperty("metadata")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public MetaData metadata;
 
+    /**
+     * Builds a {@code PaymentRequest} for the given receiver, amount, and expiration.
+     *
+     * @param receiver         the wallet that will receive the payment
+     * @param amount           the payment amount, must not be negative
+     * @param expiresInSeconds the number of seconds until the payment expires, must be greater than zero
+     * @return a new {@code PaymentRequest} instance
+     * @throws IllegalArgumentException if receiver is null, amount is negative, or expiresInSeconds is not positive
+     */
     public static PaymentRequest build(PaymentPointer receiver, BigDecimal amount, int expiresInSeconds) {
 
         Assert.notNull(receiver, "receiver cannot be null.");

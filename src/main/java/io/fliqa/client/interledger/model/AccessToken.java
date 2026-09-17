@@ -49,6 +49,12 @@ import java.util.Set;
 public class AccessToken {
 
     /**
+     * Creates a new, empty {@code AccessToken} instance.
+     */
+    public AccessToken() {
+    }
+
+    /**
      * The access token value that should be used in API requests.
      * 
      * <p>This is the actual token string that the client must include in
