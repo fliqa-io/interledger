@@ -22,6 +22,7 @@ import io.fliqa.client.interledger.utils.Assert;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * Represents a request to create an incoming payment on a receiver's wallet.
@@ -62,11 +63,12 @@ public class PaymentRequest {
     Instant expiresAt;
 
     /**
-     * Optional metadata associated with this payment.
+     * Optional metadata associated with this payment - a free-form JSON object (arbitrary
+     * keys allowed), as defined by the Open Payments specification.
      */
     @JsonProperty("metadata")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetaData metadata;
+    public Map<String, Object> metadata;
 
     /**
      * Builds a {@code PaymentRequest} for the given receiver, amount, and expiration.

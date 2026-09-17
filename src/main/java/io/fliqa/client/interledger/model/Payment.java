@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * Represents a completed or in-progress payment in the Interledger Open Payments protocol.
@@ -47,7 +48,6 @@ import java.time.Instant;
  * @see IncomingPayment
  * @see OutgoingPayment
  * @see InterledgerAmount
- * @see MetaData
  */
 public class Payment {
 
@@ -212,16 +212,17 @@ public class Payment {
 
     /**
      * Optional metadata associated with this payment.
-     * 
-     * <p>This can include additional context, references, or descriptive
-     * information about the payment purpose, invoice numbers, or other
-     * business-related data that was provided when creating the payment.
-     * 
-     * @see MetaData
+     *
+     * <p>This is a free-form JSON object as defined by the Open Payments specification
+     * (arbitrary keys are allowed) - it can include additional context, references, or
+     * descriptive information about the payment purpose, invoice numbers, or other
+     * business-related data that was provided when creating the payment. For a failed
+     * outgoing payment, this is also where the auth server may report a failure reason,
+     * for example {@code {"cancellationReason": "Insufficient funds"}}.
      */
     @JsonProperty("metadata")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetaData metadata;
+    public Map<String, Object> metadata;
 
     @Override
     public String toString() {

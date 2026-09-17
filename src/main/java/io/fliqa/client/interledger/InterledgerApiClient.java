@@ -227,4 +227,57 @@ public interface InterledgerApiClient {
      * @see AccessGrant
      */
     IncomingPayment getIncomingPayment(IncomingPayment incomingPayment, AccessGrant grantRequest) throws InterledgerClientException;
+
+    /**
+     * Retrieves the current status of an outgoing payment.
+     *
+     * <p>Unlike {@link #getIncomingPayment(IncomingPayment, AccessGrant)}, which relies on the
+     * receiver-side incoming payment grant, this method uses the sender-side outgoing payment
+     * grant obtained from {@link #finalizeGrant(OutgoingPayment, String)}. This access is
+     * independent of the receiver's incoming payment grant and its read permissions, so it
+     * remains a usable way to confirm sent/received amounts and failure status even after the
+     * incoming payment has been completed.
+     *
+     * @param paymentId the outgoing payment resource URI, typically {@link Payment#id} as
+     *                  returned by {@link #finalizePayment(AccessGrant, PaymentPointer, Quote)}
+     * @param grant the finalized access grant that authorized the outgoing payment
+     * @return the current outgoing payment status including sent/received amounts and failure state
+     * @throws InterledgerClientException if the payment cannot be found or access is denied
+     * @see Payment
+     * @see AccessGrant
+     */
+    Payment getOutgoingPayment(URI paymentId, AccessGrant grant) throws InterledgerClientException;
+
+    /**
+     * Polls the continuation URI without an interaction reference, to check whether the grant
+     * has been approved, denied, or is still pending user interaction.
+     *
+     * <p>Per GNAP, {@code interact_ref} is optional on the continuation request. A client that
+     * has not received one yet - for example after a callback with an empty {@code interact_ref},
+     * or while waiting on a polling-based interaction - can still call this endpoint. The
+     * authorization server responds with one of:
+     * <ul>
+     *   <li>an access token - the grant was approved</li>
+     *   <li>a continuation reference with no access token - still pending, retry after the
+     *       {@link AccessContinue#wait} period</li>
+     *   <li>a {@code request_denied} error (HTTP 401) - see the caveat below</li>
+     * </ul>
+     *
+     * <p><strong>Caveat:</strong> a {@code request_denied} response from this method is not
+     * necessarily an authoritative denial. Against the Rafiki reference implementation
+     * ({@code interledger-test.dev}), this exact error (with description "grant cannot be
+     * polled") is returned for <em>any</em> continuation attempt made without an
+     * {@code interact_ref}, regardless of whether the resource owner approved or denied the
+     * grant - i.e. that server does not support headless polling at all. A {@code request_denied}
+     * received here should be treated as inconclusive; only a {@code request_denied} from
+     * {@link #finalizeGrant(OutgoingPayment, String)} - where an {@code interact_ref} was
+     * actually presented and explicitly rejected - is an authoritative denial signal.
+     *
+     * @param outgoingPayment the pending payment returned by {@link #continueGrant(PaymentPointer, Quote, URI, String)}
+     * @return the current grant state
+     * @throws InterledgerClientException if the request is rejected or otherwise fails
+     * @see #finalizeGrant(OutgoingPayment, String)
+     * @see AccessContinue
+     */
+    AccessGrant pollGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException;
 }

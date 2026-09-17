@@ -281,6 +281,20 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     }
 
     @Override
+    public AccessGrant pollGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException {
+        Assert.notNull(outgoingPayment, "OutgoingPayment cannot be null");
+        LOGGER.debug("pollGrant: {}", outgoingPayment);
+
+        HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
+                .POST() // no body - interact_ref is optional and omitted entirely
+                .target(outgoingPayment.paymentContinue.uri)
+                .accessToken(extractContinueAccessToken(outgoingPayment))
+                .getRequest(options);
+
+        return send(request, AccessGrant.class);
+    }
+
+    @Override
     public Payment finalizePayment(AccessGrant finalizedGrant, PaymentPointer senderWallet, Quote quote) throws InterledgerClientException {
         Assert.notNull(finalizedGrant, "AccessGrant finalizedGrant cannot be null");
         Assert.notNull(senderWallet, "PaymentPointer senderWallet cannot be null");
@@ -313,6 +327,21 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
                 .getRequest(options);
 
         return send(request, IncomingPayment.class);
+    }
+
+    @Override
+    public Payment getOutgoingPayment(URI paymentId, AccessGrant grant) throws InterledgerClientException {
+        Assert.notNull(paymentId, "URI paymentId cannot be null");
+        Assert.notNull(grant, "AccessGrant cannot be null");
+        LOGGER.debug("getOutgoingPayment: {}", paymentId);
+
+        HttpRequest request = new SignatureRequestBuilder(privateKey, keyId, mapper)
+                .GET()
+                .target(paymentId)
+                .accessToken(extractAccessToken(grant))
+                .getRequest(options);
+
+        return send(request, Payment.class);
     }
 
     /**

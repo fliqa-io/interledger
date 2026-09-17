@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -142,14 +143,13 @@ public class IncomingPayment {
 
     /**
      * Optional metadata associated with this incoming payment.
-     * 
-     * <p>This can include additional context, references, or descriptive
-     * information about the payment purpose, invoice numbers, or other
+     *
+     * <p>This is a free-form JSON object as defined by the Open Payments specification
+     * (arbitrary keys are allowed) - it can include additional context, references, or
+     * descriptive information about the payment purpose, invoice numbers, or other
      * business-related data.
-     * 
-     * @see MetaData
      */
     @JsonProperty("metadata")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetaData metadata;
+    public Map<String, Object> metadata;
 }

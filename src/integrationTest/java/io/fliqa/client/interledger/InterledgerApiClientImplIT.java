@@ -143,7 +143,8 @@ class InterledgerApiClientImplIT {
         // This establishes the payment destination and amount that the sender will pay to.
         log.info("********");
         log.info("STEP 2: Create incoming payment request");
-        IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(12.34));
+        //IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(12.34));
+        IncomingPayment incomingPayment = client.createIncomingPayment(receiverWallet, grantRequest, BigDecimal.valueOf(1234.56)); // not enough balance
         assertNotNull(incomingPayment);
         log.info("Incoming payment created: " + incomingPayment.id + " for " +
                 incomingPayment.incomingAmount.amount + " " + incomingPayment.incomingAmount.assetCode);
@@ -214,9 +215,13 @@ class InterledgerApiClientImplIT {
         log.info("********");
         log.info("STEP 6: Finalize payment transaction");
 
+        // Hoisted so they remain accessible in STEP 8 below, where we explore which
+        // status-check calls still work once the incoming payment has been completed.
+        AccessGrant finalized = null;
+        Payment finalizedPayment = null;
+
         if (interactReference != null && !interactReference.isBlank()) {
             log.info("User approved payment - finalizing with reference: " + interactReference);
-            AccessGrant finalized = null;
             try {
                 // STEP 6A: Finalize the grant using the interact reference
                 // This confirms the user's authorization and provides final access token
@@ -224,23 +229,41 @@ class InterledgerApiClientImplIT {
                 assertNotNull(finalized);
                 log.info("Grant finalized successfully");
             } catch (InterledgerClientException e) {
-                log.error("Failed to finalize grant: " + e.getMessage());
-            }
-
-            if (finalized != null && finalized.access.token != null) {
-                // STEP 6B: Execute the actual payment using the finalized grant
-                // This transfers the funds from sender to receiver
-                Payment finalizedPayment = client.finalizePayment(finalized, senderWallet, quote);
-                assertNotNull(finalizedPayment);
-                assertFalse(finalizedPayment.failed);
-                log.info("Payment executed successfully: " + finalizedPayment.id);
-            } else {
-                log.info("********");
-                log.error("Cannot execute payment - grant finalization failed: " + continueInteract.interact.redirect);
+                logGrantFinalizationError(e, false);
             }
         } else {
+            // STEP 6A (no interact_ref): rather than assuming denial just because the callback
+            // came back empty, poll the continuation endpoint directly. GNAP's
+            // continuation-request schema makes interact_ref optional, so the client may still
+            // call POST /continue/{id} with no body - but note that not every auth server
+            // supports this (see logGrantFinalizationError's javadoc for what we observed
+            // against Rafiki/interledger-test.dev).
             log.info("********");
-            log.error("Payment DECLINED - user did not provide interact_ref");
+            log.info("No interact_ref on callback - polling continuation endpoint instead of assuming denial");
+            try {
+                AccessGrant polled = client.pollGrant(continueInteract);
+                if (polled.access != null && polled.access.token != null) {
+                    finalized = polled;
+                    log.info("Grant approved (discovered via poll, without an interact_ref)");
+                } else {
+                    Integer wait = continueInteract.paymentContinue.wait;
+                    log.info("Grant still pending user interaction" + (wait != null ? " (retry after " + wait + "s)" : ""));
+                }
+            } catch (InterledgerClientException e) {
+                logGrantFinalizationError(e, true);
+            }
+        }
+
+        if (finalized != null && finalized.access.token != null) {
+            // STEP 6B: Execute the actual payment using the finalized grant
+            // This transfers the funds from sender to receiver
+            finalizedPayment = client.finalizePayment(finalized, senderWallet, quote);
+            assertNotNull(finalizedPayment);
+            assertFalse(finalizedPayment.failed);
+            log.info("Payment executed successfully: " + finalizedPayment.id);
+        } else {
+            log.info("********");
+            log.error("Cannot execute payment - grant was not finalized: " + continueInteract.interact.redirect);
         }
 
         // STEP 7: PAYMENT STATUS MONITORING
@@ -266,6 +289,89 @@ class InterledgerApiClientImplIT {
             log.info("Final payment amount: " + payment.receivedAmount.amount + " " + payment.receivedAmount.assetCode);
         } else {
             log.warn("Payment did not complete within timeout period");
+        }
+
+        // STEP 8: EXPLORE STATUS-CHECK OPTIONS AFTER PAYMENT COMPLETION
+        // Once the incoming payment is marked completed, the receiver-side grant used by
+        // getIncomingPayment(...) may no longer be usable for polling - some wallets restrict
+        // or revoke read access once an incoming payment is completed. Here we probe a few
+        // different calls to see which ones remain usable after completion:
+        //   A) re-check the incoming payment with the original receiver-side grant
+        //   B) check the outgoing payment with the sender-side finalized grant
+        // Each call is isolated in its own try/catch so a failure in one does not hide the
+        // result of the others - we're only interested in observing what works.
+        //
+        // NOTE on DENIED payments: none of these calls will ever distinguish "denied" from
+        // "still pending" - if the user denies consent, no outgoing payment is ever created,
+        // so getIncomingPayment simply stays completed=false/receivedAmount=0 forever (until
+        // the incoming payment expires), and getOutgoingPayment has no resource to fetch.
+        // Denial is only observable earlier, in STEP 6A, as a 401 "request_denied" GNAP error
+        // from finalizeGrant(...) or pollGrant(...) - see logGrantFinalizationError(...) below.
+        log.info("********");
+        log.info("STEP 8: Explore payment status checks after completion");
+
+        // Option A: re-check the incoming payment (receiver-side grant from STEP 1)
+        try {
+            IncomingPayment recheck = client.getIncomingPayment(incomingPayment, grantRequest);
+            log.info("getIncomingPayment after completion: OK - completed=" + recheck.completed +
+                    ", receivedAmount=" + recheck.receivedAmount.amount + " " + recheck.receivedAmount.assetCode);
+        } catch (InterledgerClientException e) {
+            log.warn("getIncomingPayment after completion FAILED: " + e.getMessage());
+        }
+
+        // Option B: check the outgoing payment (sender-side grant from STEP 6A/6B)
+        if (finalizedPayment != null && finalized != null) {
+            try {
+                Payment outgoingStatus = client.getOutgoingPayment(finalizedPayment.id, finalized);
+                assertNotNull(outgoingStatus);
+                log.info("getOutgoingPayment: OK - failed=" + outgoingStatus.failed +
+                        ", sentAmount=" + outgoingStatus.sentAmount.amount + " " + outgoingStatus.sentAmount.assetCode +
+                        ", receivedAmount=" + outgoingStatus.receivedAmount.amount + " " + outgoingStatus.receivedAmount.assetCode +
+                        ", metadata=" + outgoingStatus.metadata);
+                if (Boolean.TRUE.equals(outgoingStatus.failed)) {
+                    // metadata is free-form per the Open Payments spec - Rafiki reports a
+                    // failure reason here, e.g. {"cancellationReason": "Insufficient funds"}
+                    log.warn("Outgoing payment FAILED - metadata: " + outgoingStatus.metadata);
+                }
+            } catch (InterledgerClientException e) {
+                log.warn("getOutgoingPayment FAILED: " + e.getMessage());
+            }
+        } else {
+            log.info("Skipping getOutgoingPayment check - payment was not finalized (denied, abandoned, or failed - see STEP 6 log above)");
+        }
+    }
+
+    /**
+     * Logs the outcome of a failed grant finalization/poll attempt, distinguishing an explicit
+     * GNAP {@code request_denied} rejection (HTTP 401) from any other failure.
+     *
+     * <p>The meaning of {@code request_denied} depends on how it was triggered. When it comes
+     * back from {@link InterledgerApiClient#finalizeGrant(OutgoingPayment, String)} - i.e. an
+     * {@code interact_ref} was actually presented - it's an authoritative signal that the user
+     * denied the grant. When it comes back from {@link InterledgerApiClient#pollGrant(OutgoingPayment)}
+     * - i.e. no {@code interact_ref} was available - it's ambiguous: as observed against the
+     * Rafiki reference implementation ({@code interledger-test.dev}), that auth server returns
+     * this exact code with description "grant cannot be polled" for <em>any</em> continuation
+     * attempt made without an {@code interact_ref}, regardless of whether the user approved or
+     * denied. So a poll-triggered {@code request_denied} should be treated as inconclusive.
+     *
+     * @param e       the exception thrown by {@code finalizeGrant}/{@code pollGrant}
+     * @param viaPoll {@code true} if {@code e} came from {@code pollGrant} (no interact_ref
+     *                presented), {@code false} if it came from {@code finalizeGrant} (an
+     *                interact_ref was presented and explicitly rejected)
+     */
+    private static void logGrantFinalizationError(InterledgerClientException e, boolean viaPoll) {
+        boolean requestDenied = e.getCode() == 401 && e.getMessage() != null && e.getMessage().contains("(request_denied)");
+
+        if (requestDenied && viaPoll) {
+            log.warn("Grant continuation rejected (request_denied) while polling without an interact_ref: " +
+                    e.getMessage() + " - this MAY mean the user denied consent, or simply that this auth " +
+                    "server does not support polling without an interact_ref (observed with Rafiki/" +
+                    "interledger-test.dev). Treat as inconclusive, not a confirmed denial.");
+        } else if (requestDenied) {
+            log.error("Payment DENIED by user during wallet interaction: " + e.getMessage());
+        } else {
+            log.error("Failed to finalize grant: " + e.getMessage());
         }
     }
 }

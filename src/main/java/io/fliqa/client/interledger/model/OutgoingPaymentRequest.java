@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.net.URI;
+import java.util.Map;
 
 /**
  * Represents a request to create an outgoing payment.
@@ -55,11 +56,12 @@ public class OutgoingPaymentRequest {
     public URI quoteId;
 
     /**
-     * Additional metadata for the payment.
+     * Additional metadata for the payment - a free-form JSON object (arbitrary keys allowed),
+     * as defined by the Open Payments specification.
      */
     @JsonProperty("metadata")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public MetaData metadata;
+    public Map<String, Object> metadata;
 
     /**
      * Reference to the incoming payment that will receive the funds.
