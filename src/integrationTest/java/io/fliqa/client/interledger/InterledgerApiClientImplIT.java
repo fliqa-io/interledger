@@ -199,6 +199,9 @@ class InterledgerApiClientImplIT {
         // MANUAL STEP: User clicks redirect link and authorizes payment in their wallet
         // The wallet redirects back with an interact_ref parameter that we need to capture
         String interactReference = JOptionPane.showInputDialog("Enter interact_ref query parameter from return URL:");
+        if (interactReference != null) {
+            interactReference = interactReference.trim(); // guard against stray whitespace from copy/paste
+        }
         System.out.println("You entered: " + interactReference);
 
         // STEP 5.5: CHECK PAYMENT STATUS BEFORE FINALIZATION
@@ -267,11 +270,16 @@ class InterledgerApiClientImplIT {
         }
 
         // STEP 7: PAYMENT STATUS MONITORING
-        // Poll the payment status until completion or timeout (10 attempts)
+        // Poll the payment status until completion, a definitive failure, or timeout (10 attempts).
+        // getIncomingPayment alone can never reveal a failure (e.g. insufficient funds) - it just
+        // stays completed=false forever - so we also poll getOutgoingPayment (sender-side grant)
+        // on each round and stop as soon as it reports failed=true, instead of spinning through
+        // all 10 attempts for an outcome that's already known.
         log.info("********");
         log.info("STEP 7: Monitor payment completion status");
         int count = 0;
-        while (!payment.completed && count < 10) { // wait at least 10s ...
+        boolean outgoingFailed = false;
+        while (!payment.completed && !outgoingFailed && count < 10) { // wait at least 10s ...
             count++;
 
             payment = client.getIncomingPayment(incomingPayment, grantRequest);
@@ -279,7 +287,24 @@ class InterledgerApiClientImplIT {
             log.info("********");
             log.info("Payment status check #" + count + " - Completed: " + payment.completed);
 
-            if (!payment.completed) {
+            if (!payment.completed && finalizedPayment != null) {
+                try {
+                    Payment outgoingStatus = client.getOutgoingPayment(finalizedPayment.id, finalized);
+                    assertNotNull(outgoingStatus);
+                    log.info("Outgoing payment check #" + count + " - failed=" + outgoingStatus.failed);
+
+                    if (Boolean.TRUE.equals(outgoingStatus.failed)) {
+                        outgoingFailed = true;
+                        // metadata is free-form per the Open Payments spec - Rafiki reports a
+                        // failure reason here, e.g. {"cancellationReason": "Insufficient funds"}
+                        log.error("Outgoing payment FAILED - stopping poll early. metadata: " + outgoingStatus.metadata);
+                    }
+                } catch (InterledgerClientException e) {
+                    log.warn("Outgoing payment check #" + count + " FAILED: " + e.getMessage());
+                }
+            }
+
+            if (!payment.completed && !outgoingFailed) {
                 sleep(1000); // Wait 1 second before the next check
             }
         }
@@ -287,6 +312,8 @@ class InterledgerApiClientImplIT {
         if (payment.completed) {
             log.info("SUCCESS: Payment completed successfully!");
             log.info("Final payment amount: " + payment.receivedAmount.amount + " " + payment.receivedAmount.assetCode);
+        } else if (outgoingFailed) {
+            log.warn("Payment FAILED - stopped polling early (see outgoing payment failure above)");
         } else {
             log.warn("Payment did not complete within timeout period");
         }
