@@ -217,7 +217,8 @@ signing {
     val secretKey = project.findProperty("signing.secretKey")?.toString() ?: System.getenv("SIGNING_SECRET_KEY")
 
     if (!keyId.isNullOrBlank() && !password.isNullOrBlank() && !secretKey.isNullOrBlank()) {
-        useInMemoryPgpKeys(keyId, secretKey, password)
+        val decodedSecretKey = String(Base64.getDecoder().decode(secretKey))
+        useInMemoryPgpKeys(keyId, decodedSecretKey, password)
         sign(publishing.publications["maven"])
     }
 }
