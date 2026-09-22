@@ -182,9 +182,10 @@ class InterledgerApiClientImplIT {
         // This implements the interactive authorization flow required by Open Payments.
         log.info("********");
         log.info("STEP 5: Create user interaction redirect");
+        String clientNonce = "test";
         OutgoingPayment continueInteract = client.continueGrant(senderWallet, quote,
                 URI.create("https://demo.fliqa.io/interledger/payment.html?paymentId=1234"),
-                "test");
+                clientNonce);
 
         // The redirect URL will contain query parameters when the user returns:
         // Example: https://demo.fliqa.io/interledger?hash=...&interact_ref=bd046f2e-656b-499e-af36-8fd495e083fb
@@ -193,16 +194,25 @@ class InterledgerApiClientImplIT {
         log.info("USER INTERACTION REQUIRED:");
         log.info(String.format("CLICK ON LINK: %s", continueInteract.interact.redirect));
         System.out.printf("CLICK ON LINK: %s%n", continueInteract.interact.redirect);
-        log.info("After clicking, copy the 'interact_ref' parameter from the return URL");
+        log.info("After clicking, copy the 'hash' and 'interact_ref' parameters from the return URL");
         log.info("********");
 
         // MANUAL STEP: User clicks redirect link and authorizes payment in their wallet
-        // The wallet redirects back with an interact_ref parameter that we need to capture
+        // The wallet redirects back with hash and interact_ref parameters that we need to capture
         String interactReference = JOptionPane.showInputDialog("Enter interact_ref query parameter from return URL:");
         if (interactReference != null) {
             interactReference = interactReference.trim(); // guard against stray whitespace from copy/paste
         }
-        System.out.println("You entered: " + interactReference);
+        System.out.println("You entered interact_ref: " + interactReference);
+
+        String hash = null;
+        if (interactReference != null && !interactReference.isBlank()) {
+            hash = JOptionPane.showInputDialog("Enter hash query parameter from return URL:");
+            if (hash != null) {
+                hash = hash.trim();
+            }
+            System.out.println("You entered hash: " + hash);
+        }
 
         // STEP 5.5: CHECK PAYMENT STATUS BEFORE FINALIZATION
         // Verify the payment state before attempting to finalize it
@@ -228,7 +238,7 @@ class InterledgerApiClientImplIT {
             try {
                 // STEP 6A: Finalize the grant using the interact reference
                 // This confirms the user's authorization and provides final access token
-                finalized = client.finalizeGrant(continueInteract, interactReference);
+                finalized = client.finalizeGrant(continueInteract, interactReference, hash, clientNonce, senderWallet.authServer);
                 assertNotNull(finalized);
                 log.info("Grant finalized successfully");
             } catch (InterledgerClientException e) {

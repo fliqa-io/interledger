@@ -46,14 +46,14 @@ Add the following dependency to your project:
 <dependency>
     <groupId>io.fliqa</groupId>
     <artifactId>interledger</artifactId>
-    <version>1.0.2</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```kotlin
-implementation("io.fliqa:interledger:1.0.2")
+implementation("io.fliqa:interledger:1.1.0")
 ```
 
 ### Basic Usage
@@ -67,11 +67,26 @@ InterledgerApiClient client = new InterledgerApiClientImpl(
         );
 
 // Get wallet information
-PaymentPointer wallet = client.getWallet(receiverWallet);
+PaymentPointer receiver = client.getWallet(receiverWallet);
+PaymentPointer sender = client.getWallet(senderWallet);
 
-// Create payment flow
-AccessGrant grant = client.createPendingGrant(wallet);
-IncomingPayment payment = client.createIncomingPayment(wallet, grant, amount);
+// Receiver side: create the incoming payment
+AccessGrant receiverGrant = client.createPendingGrant(receiver);
+IncomingPayment incomingPayment = client.createIncomingPayment(receiver, receiverGrant, amount);
+
+// Sender side: quote the payment, then ask the user to confirm it in their wallet
+AccessGrant quoteGrant = client.createQuoteRequest(sender);
+Quote quote = client.createQuote(quoteGrant.access.token, sender, incomingPayment);
+OutgoingPayment pending = client.continueGrant(sender, quote, returnUrl, nonce);
+// -> redirect the user to pending.interact.redirect
+
+// After the user confirms/denies in their wallet, they are redirected back to `returnUrl`
+// with `interact_ref` and `hash` query parameters:
+AccessGrant finalized = client.finalizeGrant(pending, interactRef, hash, nonce, sender.authServer);
+Payment payment = client.finalizePayment(finalized, sender, quote);
+
+// Later: check on the payment independently of the receiver's incoming payment grant
+Payment status = client.getOutgoingPayment(payment.id, finalized);
 ```
 
 ## Building from Source
@@ -94,7 +109,7 @@ IncomingPayment payment = client.createIncomingPayment(wallet, grant, amount);
 ./gradlew integrationTest
 
 # Publish to local Maven repository
-./gradlew publishToMavenLocal -Prelease.version=1.0.0
+./gradlew publishToMavenLocal -Prelease.version=1.1.0
 ```
 
 ## Interledger Open payment protocol
@@ -146,13 +161,41 @@ transaction fees.
 
 ### 3. Redirect user to confirm the payment
 
-Once we have the quote, we can create a redirect link for the sender to confirm the payment.
+Once we have the quote, we can create a redirect link (via `continueGrant`) for the sender to confirm the payment.
 
 > **NOTE:** User is redirected to his wallet where he confirms / denies the payment
 
 ### 4. Finalization of payment
 
-When the user has confirmed the payment, Fliqa needs to finalize it with an additional call to the sender wallet.
+When the user has confirmed the payment, the wallet redirects back to Fliqa's `returnUrl` with an
+`interact_ref` and a `hash` query parameter. Before that `interact_ref` is used, `finalizeGrant` verifies
+the `hash` against the `clientNonce` originally passed to `continueGrant`, the auth server's `nonce`, the
+`interact_ref` itself, and the sender's auth server URI - per the
+[GNAP interaction hash check](https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3).
+This prevents a forged callback from being used to hijack a payment grant; if the hash doesn't match, an
+`InterledgerClientException` is thrown instead of finalizing the grant.
+
+Only once the hash is verified does `finalizeGrant` exchange the `interact_ref` for the access token used
+by `finalizePayment` to actually move the funds.
+
+> **NOTE:** As of v1.1.0, `finalizeGrant` requires `hash`, `clientNonce` and `grantEndpoint` (the sender's
+> auth server URI) in addition to the `interactRef` - see the [Changelog](CHANGELOG.md) for the migration.
+
+### 5. Checking payment / grant status
+
+Because user confirmation happens out-of-band in the wallet's UI, Fliqa may also need to check on a
+payment without waiting on the redirect callback, or after the fact:
+
+- `pollGrant` - polls the continuation URI without an `interact_ref` to see whether the grant is still
+  pending, was approved, or was denied. Against some Open Payments implementations (e.g. the Rafiki
+  reference implementation) a denial can only be confirmed authoritatively via `finalizeGrant`, since
+  headless polling isn't supported there - see the JavaDoc for details.
+- `getOutgoingPayment` - once a payment has been finalized (`finalizePayment`), this checks its status
+  directly on the sender's wallet using the finalized access grant. This is independent of the receiver's
+  incoming payment grant, so it remains usable even after the incoming payment itself has completed.
+- `rotateToken` - access tokens (incoming-payment, quote, and outgoing-payment alike) expire; this renews
+  a token before it expires without repeating the interactive grant flow, which is useful when polling
+  `getOutgoingPayment` over a longer period.
 
 ### Final notes
 
@@ -305,9 +348,11 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 
 ## Roadmap
 
-### Current Version (1.0.2)
+### Current Version (1.1.0)
 
 - ✅ Core Interledger Open Payments implementation for Fliqa specific use cases
+- ✅ GNAP interaction hash verification on payment finalization
+- ✅ Outgoing payment status checks and access token rotation
 
 See our [GitHub Milestones](https://github.com/fliqa-io/interledger/milestones) for detailed planning.
 

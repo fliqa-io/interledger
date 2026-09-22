@@ -176,21 +176,29 @@ public interface InterledgerApiClient {
 
     /**
      * Finalizes the grant after the user has approved the payment.
-     * 
+     *
      * <p>Once the user completes the interactive authorization flow, they are redirected
-     * back with an interaction reference. This method uses that reference to finalize
-     * the grant and obtain the final access token needed to execute the payment.
-     * 
+     * back with a {@code hash} and an {@code interact_ref} query parameter. Before the
+     * {@code interactRef} is used, this method verifies the {@code hash} using
+     * {@link io.fliqa.client.interledger.model.GrantAccessRequest#verifyInteractionHash(String, String, String, String, java.net.URI)}
+     * - as required by GNAP - to make sure the callback was not forged, then uses the
+     * reference to finalize the grant and obtain the final access token needed to execute
+     * the payment.
+     *
      * <p><strong>Step 6</strong> in the payment flow (Client side).
-     * 
-     * @param outgoingPayment the pending payment to be finalized
+     *
+     * @param outgoingPayment the pending payment to be finalized, as returned by {@link #continueGrant(PaymentPointer, Quote, java.net.URI, String)}
      * @param interactRef interaction reference returned from the user's wallet after authorization
+     * @param hash the {@code hash} query parameter returned from the user's wallet alongside {@code interactRef}
+     * @param clientNonce the nonce originally passed to {@link #continueGrant(PaymentPointer, Quote, java.net.URI, String)}
+     * @param grantEndpoint the sender's auth server URI that the grant request was sent to (i.e. {@code sender.authServer})
      * @return finalized access grant with tokens to execute the payment
-     * @throws InterledgerClientException if the grant cannot be finalized or the interaction reference is invalid
+     * @throws InterledgerClientException if the grant cannot be finalized, the interaction reference is invalid,
+     * or the {@code hash} does not match the expected value
      * @see AccessGrant
      * @see OutgoingPayment
      */
-    AccessGrant finalizeGrant(OutgoingPayment outgoingPayment, String interactRef) throws InterledgerClientException;
+    AccessGrant finalizeGrant(OutgoingPayment outgoingPayment, String interactRef, String hash, String clientNonce, java.net.URI grantEndpoint) throws InterledgerClientException;
 
     /**
      * Executes the final payment using the finalized grant.
@@ -201,7 +209,7 @@ public interface InterledgerApiClient {
      * 
      * <p><strong>Step 7</strong> in the payment flow (Client side).
      * 
-     * @param finalized the finalized access grant obtained from {@link #finalizeGrant(OutgoingPayment, String)}
+     * @param finalized the finalized access grant obtained from {@link #finalizeGrant(OutgoingPayment, String, String, String, java.net.URI)}
      * @param senderWallet the wallet that will send the payment
      * @param quote the quote that determines payment amounts and fees
      * @return completed payment details including transaction ID and status
@@ -233,7 +241,7 @@ public interface InterledgerApiClient {
      *
      * <p>Unlike {@link #getIncomingPayment(IncomingPayment, AccessGrant)}, which relies on the
      * receiver-side incoming payment grant, this method uses the sender-side outgoing payment
-     * grant obtained from {@link #finalizeGrant(OutgoingPayment, String)}. This access is
+     * grant obtained from {@link #finalizeGrant(OutgoingPayment, String, String, String, java.net.URI)}. This access is
      * independent of the receiver's incoming payment grant and its read permissions, so it
      * remains a usable way to confirm sent/received amounts and failure status even after the
      * incoming payment has been completed.
@@ -270,13 +278,13 @@ public interface InterledgerApiClient {
      * {@code interact_ref}, regardless of whether the resource owner approved or denied the
      * grant - i.e. that server does not support headless polling at all. A {@code request_denied}
      * received here should be treated as inconclusive; only a {@code request_denied} from
-     * {@link #finalizeGrant(OutgoingPayment, String)} - where an {@code interact_ref} was
+     * {@link #finalizeGrant(OutgoingPayment, String, String, String, java.net.URI)} - where an {@code interact_ref} was
      * actually presented and explicitly rejected - is an authoritative denial signal.
      *
      * @param outgoingPayment the pending payment returned by {@link #continueGrant(PaymentPointer, Quote, URI, String)}
      * @return the current grant state
      * @throws InterledgerClientException if the request is rejected or otherwise fails
-     * @see #finalizeGrant(OutgoingPayment, String)
+     * @see #finalizeGrant(OutgoingPayment, String, String, String, java.net.URI)
      * @see AccessContinue
      */
     AccessGrant pollGrant(OutgoingPayment outgoingPayment) throws InterledgerClientException;

@@ -264,10 +264,18 @@ public class InterledgerApiClientImpl implements InterledgerApiClient {
     }
 
     @Override
-    public AccessGrant finalizeGrant(OutgoingPayment outgoingPayment, String interactRef) throws InterledgerClientException {
+    public AccessGrant finalizeGrant(OutgoingPayment outgoingPayment, String interactRef, String hash, String clientNonce, URI grantEndpoint) throws InterledgerClientException {
         Assert.notNull(outgoingPayment, "OutgoingPayment cannot be null");
         Assert.notNullOrEmpty(interactRef, "Interact reference cannot be null or empty");
+        Assert.notNullOrEmpty(hash, "Hash cannot be null or empty");
+        Assert.notNullOrEmpty(clientNonce, "Client nonce cannot be null or empty");
+        Assert.notNull(grantEndpoint, "Grant endpoint cannot be null");
+        Assert.notNull(outgoingPayment.interact, "OutgoingPayment.interact cannot be null");
         LOGGER.debug("finalizeGrant: {} for: {}", outgoingPayment, interactRef);
+
+        if (!GrantAccessRequest.verifyInteractionHash(clientNonce, outgoingPayment.interact.token, interactRef, hash, grantEndpoint)) {
+            throw new InterledgerClientException("Interaction hash verification failed - the callback may have been forged.");
+        }
 
         InteractRef ref = InteractRef.build(interactRef);
 

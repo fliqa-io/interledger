@@ -18,12 +18,14 @@ package io.fliqa.client.interledger.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fliqa.client.interledger.utils.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 /**
  * Represents a request to grant access to resources using the GNAP protocol.
@@ -64,6 +66,8 @@ import java.util.Set;
  * @since 1.0
  */
 public class GrantAccessRequest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GrantAccessRequest.class);
 
     /**
      * The client identifier for this access request.
@@ -203,5 +207,87 @@ public class GrantAccessRequest {
             interact.finish.nonce = nonce;
         }
         return this;
+    }
+
+    /**
+     * Verifies the {@code hash} query parameter that the authorization server appends to the
+     * interaction callback (redirect) URI, as defined by the GNAP interaction finish hash
+     * (<a href="https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3">
+     * draft-ietf-gnap-core-protocol &sect;4.2.3</a>).
+     *
+     * <p>The hash is calculated as {@code BASE64URL(SHA-256(clientNonce + "\n" + asNonce + "\n" +
+     * interactRef + "\n" + grantEndpoint))} and must be verified before the {@code interactRef}
+     * returned on the callback is trusted and used to call {@code finalizeGrant()} - otherwise an
+     * attacker could forge a callback and hijack the grant.
+     *
+     * @param clientNonce   the nonce this client generated and sent as {@code interact.finish.nonce}
+     *                      in the original grant request (the value passed to {@link #redirectInteract(URI, String)})
+     * @param asNonce       the authorization server's nonce, returned as {@code interact.finish} in the
+     *                      initial grant response (see {@link InteractContinue#token})
+     * @param interactRef   the {@code interact_ref} query parameter received on the callback
+     * @param hash          the {@code hash} query parameter received on the callback
+     * @param grantEndpoint the URI the initial grant request was sent to (the sender's auth server)
+     * @return {@code true} if the received hash matches the computed hash, {@code false} otherwise
+     */
+    public static boolean verifyInteractionHash(String clientNonce,
+                                                 String asNonce,
+                                                 String interactRef,
+                                                 String hash,
+                                                 URI grantEndpoint) {
+        Assert.notNullOrEmpty(clientNonce, "clientNonce cannot be null or empty.");
+        Assert.notNullOrEmpty(asNonce, "asNonce cannot be null or empty.");
+        Assert.notNullOrEmpty(interactRef, "interactRef cannot be null or empty.");
+        Assert.notNullOrEmpty(hash, "hash cannot be null or empty.");
+        Assert.notNull(grantEndpoint, "grantEndpoint cannot be null.");
+
+        String input = clientNonce + "\n" + asNonce + "\n" + interactRef + "\n" + grantEndpoint;
+
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm not available.", e);
+        }
+
+        byte[] computedHash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+        String computedHashString = Base64.getUrlEncoder().withoutPadding().encodeToString(computedHash);
+
+        byte[] receivedHash;
+        try {
+            receivedHash = decodeBase64Tolerant(hash);
+        } catch (IllegalArgumentException e) {
+            LOGGER.warn("Interaction hash verification FAILED - received hash: '{}' is not valid base64/base64url: {}",
+                    hash, e.getMessage());
+            return false;
+        }
+
+        boolean matches = MessageDigest.isEqual(computedHash, receivedHash);
+
+        if (!matches) {
+            LOGGER.warn("Interaction hash verification FAILED - clientNonce: '{}', asNonce: '{}', interactRef: '{}', " +
+                            "grantEndpoint: '{}', received hash: '{}', computed hash: '{}'",
+                    clientNonce, asNonce, interactRef, grantEndpoint, hash, computedHashString);
+        } else {
+            LOGGER.debug("Interaction hash verification succeeded - interactRef: '{}', hash: '{}'", interactRef, hash);
+        }
+
+        return matches;
+    }
+
+    /**
+     * Decodes a base64-encoded value received from a third party (the GNAP spec requires
+     * base64url without padding, but not every authorization server implementation follows that
+     * exactly) - accepts either the standard ({@code +}, {@code /}) or URL-safe ({@code -}, {@code _})
+     * alphabet, and with or without {@code =} padding.
+     */
+    private static byte[] decodeBase64Tolerant(String value) {
+        String normalized = value.replace('-', '+').replace('_', '/');
+
+        int remainder = normalized.length() % 4;
+        if (remainder != 0) {
+            normalized = normalized + "=".repeat(4 - remainder);
+        }
+
+        return Base64.getDecoder().decode(normalized);
     }
 }

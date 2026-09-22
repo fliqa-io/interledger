@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.support.serviceOf
 import java.security.MessageDigest
 import java.util.*
 
@@ -8,7 +9,7 @@ plugins {
 }
 
 group = "io.fliqa"
-version = "1.0.3-SNAPSHOT"
+version = "1.1.0"
 
 // Take version from parameter or set default
 val projectVersion = project.findProperty("release.version") as String? ?: version
@@ -277,6 +278,12 @@ tasks.register<Zip>("createCentralPortalBundle") {
 }
 
 // Task to upload bundle to Central Portal
+val centralPortalExecOps = project.serviceOf<ExecOperations>()
+val centralPortalBundleFile =
+    layout.buildDirectory.file("distributions/${project.group}.${artifactName}-${project.version}-bundle.zip")
+val centralPortalUsername = System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?
+val centralPortalPassword = System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?
+
 tasks.register("uploadToCentralPortal") {
     group = "publishing"
     description = "Uploads the bundle to Central Portal"
@@ -284,17 +291,15 @@ tasks.register("uploadToCentralPortal") {
     dependsOn("createCentralPortalBundle")
 
     doLast {
-        val username = System.getenv("SONATYPE_USERNAME") ?: project.findProperty("sonatypeUsername") as String?
-        val password = System.getenv("SONATYPE_PASSWORD") ?: project.findProperty("sonatypePassword") as String?
-        val bundleFile =
-            layout.buildDirectory.file("distributions/${project.group}.${artifactName}-${project.version}-bundle.zip")
-                .get().asFile
+        val username = centralPortalUsername
+        val password = centralPortalPassword
+        val bundleFile = centralPortalBundleFile.get().asFile
 
         if (username != null && password != null && bundleFile.exists()) {
             // Central Portal uses basic auth with username:password base64 encoded
             val credentials = Base64.getEncoder().encodeToString("${username}:${password}".toByteArray())
 
-            exec {
+            centralPortalExecOps.exec {
                 commandLine(
                     "curl", "-X", "POST",
                     "-H", "Authorization: Basic ${credentials}",
