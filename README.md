@@ -45,7 +45,7 @@ Add the following dependency to your project:
 
 <dependency>
     <groupId>io.fliqa</groupId>
-    <artifactId>interledger</artifactId>
+    <artifactId>interledger</artifactId>/
     <version>1.1.0</version>
 </dependency>
 ```

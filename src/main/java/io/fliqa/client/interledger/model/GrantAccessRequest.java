@@ -230,10 +230,10 @@ public class GrantAccessRequest {
      * @return {@code true} if the received hash matches the computed hash, {@code false} otherwise
      */
     public static boolean verifyInteractionHash(String clientNonce,
-                                                 String asNonce,
-                                                 String interactRef,
-                                                 String hash,
-                                                 URI grantEndpoint) {
+                                                String asNonce,
+                                                String interactRef,
+                                                String hash,
+                                                URI grantEndpoint) {
         Assert.notNullOrEmpty(clientNonce, "clientNonce cannot be null or empty.");
         Assert.notNullOrEmpty(asNonce, "asNonce cannot be null or empty.");
         Assert.notNullOrEmpty(interactRef, "interactRef cannot be null or empty.");
